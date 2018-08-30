@@ -18,6 +18,7 @@ import SettingsScreen from '../screens/SettingsScreen';
 import LoginScreen from '../components/LoginScreen';
 import MainScreen from '../components/MainScreen';
 import ProfileScreen from '../components/ProfileScreen';
+import EnvelopeScreen from '../screens/EnvelopeScreen';
 
 // import { MainStack } from './AppNavigator';
 
@@ -83,6 +84,7 @@ const middleware = createReactNavigationReduxMiddleware(
 const MainStackU = createStackNavigator({
   Login: { screen: LoginScreen },
   Main: { screen: MainScreen },
+  Detail: { screen: EnvelopeScreen },
   Profile: { screen: ProfileScreen },
 });
 

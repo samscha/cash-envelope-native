@@ -42,7 +42,7 @@ const envelopes = [
   { name: 'title9' },
 ];
 
-const MainScreen = () => (
+const MainScreen = props => (
   <View style={styles.container}>
     {/* <LoginStatusMessage />j */}
     {/* <AuthButton /> */}
@@ -54,9 +54,15 @@ const MainScreen = () => (
       {envelopes.map(e => (
         <Touchable
           key={e.name}
-          //   onPress={_ =>
-          //     dispatch(NavigationActions.navigate({ routeName: 'details' }))
-          //   }
+          underlayColor="#dddddd"
+          onPress={
+            _ =>
+              props.navigation.navigate('Detail', {
+                envelope: e,
+              })
+            // _ => dispatch(NavigationActions.navigate({ routeName: 'Detail' }))
+            // alert('asdf')
+          }
         >
           <Envelope key={e.name} envelope={e} />
         </Touchable>
