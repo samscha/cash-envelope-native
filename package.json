@@ -1,5 +1,5 @@
 {
-  "name": "my-new-project",
+  "name": "cash-envelope-native",
   "main": "node_modules/expo/AppEntry.js",
   "private": true,
   "scripts": {
@@ -17,7 +17,10 @@
     "expo": "29.0.0",
     "react": "16.3.1",
     "react-native": "https://github.com/expo/react-native/archive/sdk-29.0.0.tar.gz",
-    "react-navigation": "^2.9.3"
+    "react-navigation": "^2.9.3",
+    "react-navigation-redux-helpers": "^2.0.5",
+    "react-redux": "^5.0.7",
+    "redux": "^4.0.0"
   },
   "devDependencies": {
     "jest-expo": "29.0.0"

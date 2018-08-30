@@ -7,13 +7,20 @@ import {
   Text,
   TouchableOpacity,
   View,
+  TouchableNativeFeedback,
+  TouchableHighlight,
 } from 'react-native';
 import { WebBrowser, Icon } from 'expo';
+import { NavigationActions } from 'react-navigation';
+import PropTypes from 'prop-types';
+
+import { connect } from 'react-redux';
 
 import TabBarIcon from '../components/TabBarIcon';
 import Envelope from '../components/Envelope';
 
-export default class HomeScreen extends React.Component {
+// export default class HomeScreen extends React.Component {
+class HomeScreen extends React.Component {
   static navigationOptions = {
     // header: null,
     title: 'Envelopes',
@@ -34,9 +41,9 @@ export default class HomeScreen extends React.Component {
 
   render() {
     const envelopes = [
-      { name: 'title1' },
-      { name: 'title2' },
-      { name: 'title3' },
+      { name: 'Groceries' },
+      { name: 'Pet' },
+      { name: 'Gas' },
       { name: 'title4' },
       { name: 'title5' },
       { name: 'title6' },
@@ -45,6 +52,8 @@ export default class HomeScreen extends React.Component {
       { name: 'title9' },
     ];
 
+    const { dispatch } = this.props;
+
     return (
       <ScrollView style={styles.container}>
         <TouchableOpacity style={styles.button} onPress={_ => alert('asdf')}>
@@ -52,12 +61,22 @@ export default class HomeScreen extends React.Component {
         </TouchableOpacity>
 
         {envelopes.map(e => (
-          <Envelope key={e.name} envelope={e} />
+          <Touchable
+            key={e.name}
+            onPress={_ =>
+              dispatch(NavigationActions.navigate({ routeName: 'details' }))
+            }
+          >
+            <Envelope key={e.name} envelope={e} />
+          </Touchable>
         ))}
       </ScrollView>
     );
   }
 }
+
+const Touchable =
+  Platform.OS === 'android' ? TouchableNativeFeedback : TouchableHighlight;
 
 const styles = StyleSheet.create({
   container: {
@@ -83,3 +102,13 @@ const styles = StyleSheet.create({
     fontSize: 40,
   },
 });
+
+HomeScreen.propTypes = {
+  dispatch: PropTypes.func.isRequired,
+};
+
+const mapStateToProps = state => ({
+  //
+});
+
+export default connect(mapStateToProps)(HomeScreen);

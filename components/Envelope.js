@@ -24,6 +24,7 @@ const styles = StyleSheet.create({
 const Envelope = props => (
   <View style={styles.container}>
     <Text style={styles.title}>{props.envelope.name}</Text>
+    <Text style={styles.title}>{props.envelope.name}</Text>
   </View>
 );
 
