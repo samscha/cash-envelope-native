@@ -13,18 +13,20 @@
 import { combineReducers } from 'redux';
 import { NavigationActions } from 'react-navigation';
 
-import { MainStackU as RootNavigator } from '../navigators/MainTabNavigator';
+import { MainStackU as RootNavigator } from '../navigators/AppNavigator';
 // import { SwitchNav as RootNavigator } from '../navigators/AppNavigator';
 
 // const RootNavigator = SwitchNav;
 
 // Start with two routes: The Main screen, with the Login screen on top.
 const firstAction = RootNavigator.router.getActionForPathAndParams('Main');
-const tempNavState = RootNavigator.router.getStateForAction(firstAction);
-const secondAction = RootNavigator.router.getActionForPathAndParams('Login');
+// const tempNavState = RootNavigator.router.getStateForAction(firstAction);
+// const secondAction = RootNavigator.router.getActionForPathAndParams('Main');
+// const secondAction = RootNavigator.router.getActionForPathAndParams('Login');
 const initialNavState = RootNavigator.router.getStateForAction(
-  secondAction,
-  tempNavState,
+  // secondAction,
+  // tempNavState,
+  firstAction,
 );
 
 function nav(state = initialNavState, action) {
@@ -51,7 +53,7 @@ function nav(state = initialNavState, action) {
   return nextState || state;
 }
 
-const initialAuthState = { isLoggedIn: false };
+const initialAuthState = { isLoggedIn: true };
 
 function auth(state = initialAuthState, action) {
   switch (action.type) {

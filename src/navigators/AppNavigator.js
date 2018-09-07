@@ -1,111 +1,81 @@
 import React from 'react';
-import PropTypes from 'prop-types';
+import { Platform } from 'react-native';
+import {
+  createStackNavigator,
+  createBottomTabNavigator,
+  createSwitchNavigator,
+} from 'react-navigation';
 import { connect } from 'react-redux';
-import { createStackNavigator, createSwitchNavigator } from 'react-navigation';
 import {
   reduxifyNavigator,
   createReactNavigationReduxMiddleware,
 } from 'react-navigation-redux-helpers';
 
-import LoginScreen from '../components/LoginScreen';
-import MainScreen from '../components/MainScreen';
-import ProfileScreen from '../components/ProfileScreen';
+import TabBarIcon from '../components/TabBarIcon';
+import SettingsScreen from '../screens/SettingsScreen';
+import MainScreen from '../screens/MainScreen';
 
-import { bottomTabNavigator as MainTabNavigator } from './MainTabNavigator';
+// import LoginScreen from '../components/LoginScreen';
+import EnvelopeScreen from '../screens/EnvelopeScreen';
+
+const SettingsStack = createStackNavigator({
+  Settings: SettingsScreen,
+});
+
+SettingsStack.navigationOptions = {
+  tabBarLabel: 'Settings',
+  tabBarIcon: ({ focused }) => (
+    <TabBarIcon
+      focused={focused}
+      name={
+        Platform.OS === 'ios'
+          ? `ios-options${focused ? '' : '-outline'}`
+          : 'md-options'
+      }
+    />
+  ),
+};
 
 const middleware = createReactNavigationReduxMiddleware(
   'root',
   state => state.nav,
 );
 
-const RootNavigator = createStackNavigator({
-  Login: { screen: LoginScreen },
+const MainStackU = createStackNavigator({
+  // Login: { screen: LoginScreen },
   Main: { screen: MainScreen },
-  Profile: { screen: ProfileScreen },
+  Detail: { screen: EnvelopeScreen },
 });
 
-const AppWithNavigationState = reduxifyNavigator(RootNavigator, 'root');
+const AppWithNavigationState = reduxifyNavigator(MainStackU, 'root');
 
 const mapStateToProps = state => ({
   state: state.nav,
 });
 
-const AppNavigator = connect(mapStateToProps)(AppWithNavigationState);
+const MainStack = connect(mapStateToProps)(AppWithNavigationState);
 
-const SwitchNav = createSwitchNavigator({
-  Main: MainTabNavigator,
+MainStack.navigationOptions = {
+  tabBarLabel: 'Envelopes',
+  tabBarIcon: ({ focused }) => (
+    <TabBarIcon
+      focused={focused}
+      name={
+        Platform.OS === 'ios'
+          ? `ios-mail-open${focused ? '' : '-outline'}`
+          : 'md-mail-open'
+      }
+    />
+  ),
+};
+
+const bottomTabNavigator = createBottomTabNavigator({
+  MainStack,
+  SettingsStack,
 });
 
-// export { RootNavigator, AppNavigator, middleware, SwitchNav };
-export { SwitchNav };
+const AppNavigator = createSwitchNavigator({
+  Main: bottomTabNavigator,
+});
 
-// import React from 'react';
-// import { createSwitchNavigator, createStackNavigator } from 'react-navigation';
-// import {
-//   reduxifyNavigator,
-//   createReactNavigationReduxMiddleware,
-// } from 'react-navigation-redux-helpers';
-// import { connect } from 'react-redux';
-
-// import MainTabNavigator from './MainTabNavigator';
-// import NotesNavigator from './NotesNavigator';
-
-// const middleware = createReactNavigationReduxMiddleware(
-//   'root',
-//   state => state.nav,
-// );
-
-// const RootNavigator = createStackNavigator({
-//   Main: MainTabNavigator,
-//   // Notes: NotesNavigator,
-// });
-
-// const AppWithNavigationState = reduxifyNavigator(RootNavigator, 'root');
-
-// const mapStateToProps = state => ({
-//   state: state.nav,
-// });
-
-// const AppNavigator = connect(mapStateToProps)(AppWithNavigationState);
-// // const AppNavigator = createStackNavigator(NotesNavigator);
-
-// // import React from 'react';
-// // import PropTypes from 'prop-types';
-// // import { connect } from 'react-redux';
-// // import { createStackNavigator } from 'react-navigation';
-// // import {
-// //   reduxifyNavigator,
-// //   createReactNavigationReduxMiddleware,
-// // } from 'react-navigation-redux-helpers';
-
-// // import LoginScreen from '../components/LoginScreen';
-// // import MainScreen from '../components/MainScreen';
-// // import ProfileScreen from '../components/ProfileScreen';
-
-// // const middleware = createReactNavigationReduxMiddleware(
-// //   'root',
-// //   state => state.nav,
-// // );
-
-// // const RootNavigator = createStackNavigator({
-// //   Login: { screen: LoginScreen },
-// //   Main: { screen: MainScreen },
-// //   Profile: { screen: ProfileScreen },
-// // });
-
-// // const AppWithNavigationState = reduxifyNavigator(RootNavigator, 'root');
-
-// // const mapStateToProps = state => ({
-// //   state: state.nav,
-// // });
-
-// // const AppNavigator = connect(mapStateToProps)(AppWithNavigationState);
-
-// export { RootNavigator, AppNavigator, middleware };
-
-// // export default createSwitchNavigator({
-// //   // You could add another route here for authentication.
-// //   // Read more at https://reactnavigation.org/docs/en/auth-flow.html
-// //   Main: MainTabNavigator,
-// //   Notes: NotesNavigator,
-// // });
+export { AppNavigator, MainStack, MainStackU, middleware };

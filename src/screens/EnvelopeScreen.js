@@ -21,10 +21,7 @@ class EnvelopeScreen extends React.Component {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // paddingTop: 15,
-    // backgroundColor: '#dddddd',
     backgroundColor: '#fff',
-    // backgroundColor: '#00dcff',
   },
   title: {
     fontSize: 24,

@@ -1,20 +1,11 @@
 import React from 'react';
 import { Platform, StatusBar, StyleSheet, View } from 'react-native';
 import { AppLoading, Asset, Font, Icon } from 'expo';
-import {
-  AppNavigator,
-  // middleware,
-  SwitchNav,
-} from './src/navigators/AppNavigator';
-
-// import { bottomTabNavigator as SwitchNav } from './src/navigators/MainTabNavigator';
-
-import { middleware } from './src/navigators/MainTabNavigator';
+import { AppNavigator, middleware } from './src/navigators/AppNavigator';
 
 import { Provider } from 'react-redux';
 import { applyMiddleware, createStore } from 'redux';
 import reducer from './src/reducers';
-// import { store } from './store';
 
 const store = createStore(reducer, applyMiddleware(middleware));
 
@@ -37,8 +28,7 @@ export default class App extends React.Component {
         <Provider store={store}>
           <View style={styles.container}>
             {Platform.OS === 'ios' && <StatusBar barStyle="default" />}
-            {/* <AppNavigator /> */}
-            <SwitchNav />
+            <AppNavigator />
           </View>
         </Provider>
       );
