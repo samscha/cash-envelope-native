@@ -1,27 +1,72 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import {
+  Button,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  TouchableNativeFeedback,
+  TouchableHighlight,
+} from 'react-native';
 
-const styles = StyleSheet.create({
-  container: {
-    borderTopWidth: 0.5,
-    height: 100,
-  },
-  title: {
-    paddingLeft: 10,
-    paddingTop: 10,
-    fontSize: 18,
-  },
-});
+import Envelope from '../components/Envelope';
 
-const Envelope = props => (
+const envelopes = [
+  { name: 'Groceries' },
+  { name: 'Pet' },
+  { name: 'Gas' },
+  { name: 'title4' },
+  { name: 'title5' },
+  { name: 'title6' },
+  { name: 'title7' },
+];
+
+const EnvelopesScreen = props => (
   <View style={styles.container}>
-    <Text style={styles.title}>{props.envelope.name}</Text>
-    <Text style={styles.title}>{props.envelope.name}</Text>
+    <ScrollView style={styles.container}>
+      <TouchableOpacity style={styles.button} onPress={_ => alert('asdf')}>
+        <Text style={styles.buttonText}>+</Text>
+      </TouchableOpacity>
+
+      {envelopes.map(e => (
+        <Touchable
+          key={e.name}
+          underlayColor="#dddddd"
+          onPress={_ =>
+            props.navigation.navigate('Envelope', {
+              envelope: e,
+            })
+          }
+        >
+          <Envelope key={e.name} envelope={e} />
+        </Touchable>
+      ))}
+    </ScrollView>
   </View>
 );
 
-Envelope.navigationOptions = {
-  title: 'Envelope',
+EnvelopesScreen.navigationOptions = {
+  title: 'Envelopes',
 };
 
-export default Envelope;
+export default EnvelopesScreen;
+
+const Touchable =
+  Platform.OS === 'android' ? TouchableNativeFeedback : TouchableHighlight;
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#fff',
+  },
+  button: {
+    alignItems: 'center',
+    padding: 15,
+  },
+  buttonText: {
+    textAlign: 'center',
+    fontSize: 40,
+  },
+});

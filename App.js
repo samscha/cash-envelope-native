@@ -1,13 +1,15 @@
 import React from 'react';
 import { Platform, StatusBar, StyleSheet, View } from 'react-native';
-import { AppLoading, Asset, Font, Icon } from 'expo';
-import { AppNavigator, middleware } from './src/navigators/AppNavigator';
-
 import { Provider } from 'react-redux';
 import { applyMiddleware, createStore } from 'redux';
-import reducer from './src/reducers';
 
-const store = createStore(reducer, applyMiddleware(middleware));
+import { AppLoading, Asset, Font, Icon } from 'expo';
+
+import { AppNavigator } from './src/navigators/AppNavigator';
+import reducer from './src/reducers';
+import * as middleware from './src/redux';
+
+const store = createStore(reducer, applyMiddleware(middleware.MainStack));
 
 export default class App extends React.Component {
   state = {

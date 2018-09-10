@@ -5,15 +5,16 @@ import {
   createBottomTabNavigator,
   createSwitchNavigator,
 } from 'react-navigation';
-import { connect } from 'react-redux';
 import {
   reduxifyNavigator,
-  createReactNavigationReduxMiddleware,
+  // createReactNavigationReduxMiddleware,
 } from 'react-navigation-redux-helpers';
+import { connect } from 'react-redux';
 
 import TabBarIcon from '../components/TabBarIcon';
 import SettingsScreen from '../screens/SettingsScreen';
-import MainScreen from '../screens/MainScreen';
+// import MainScreen from '../screens/MainScreen';
+import { MainStack } from '../stacks/MainStack';
 
 // import LoginScreen from '../components/LoginScreen';
 import EnvelopeScreen from '../screens/EnvelopeScreen';
@@ -36,38 +37,38 @@ SettingsStack.navigationOptions = {
   ),
 };
 
-const middleware = createReactNavigationReduxMiddleware(
-  'root',
-  state => state.nav,
-);
+// const middleware = createReactNavigationReduxMiddleware(
+//   'root',
+//   state => state.nav,
+// );
 
-const MainStackU = createStackNavigator({
-  // Login: { screen: LoginScreen },
-  Main: { screen: MainScreen },
-  Detail: { screen: EnvelopeScreen },
-});
+// const MainStackU = createStackNavigator({
+//   // Login: { screen: LoginScreen },
+//   Main: { screen: MainScreen },
+//   Detail: { screen: EnvelopeScreen },
+// });
 
-const AppWithNavigationState = reduxifyNavigator(MainStackU, 'root');
+// const AppWithNavigationState = reduxifyNavigator(MainStackU, 'root');
 
-const mapStateToProps = state => ({
-  state: state.nav,
-});
+// const mapStateToProps = state => ({
+//   state: state.nav,
+// });
 
-const MainStack = connect(mapStateToProps)(AppWithNavigationState);
+// const MainStack = connect(mapStateToProps)(AppWithNavigationState);
 
-MainStack.navigationOptions = {
-  tabBarLabel: 'Envelopes',
-  tabBarIcon: ({ focused }) => (
-    <TabBarIcon
-      focused={focused}
-      name={
-        Platform.OS === 'ios'
-          ? `ios-mail-open${focused ? '' : '-outline'}`
-          : 'md-mail-open'
-      }
-    />
-  ),
-};
+// MainStack.navigationOptions = {
+//   tabBarLabel: 'Envelopes',
+//   tabBarIcon: ({ focused }) => (
+//     <TabBarIcon
+//       focused={focused}
+//       name={
+//         Platform.OS === 'ios'
+//           ? `ios-mail-open${focused ? '' : '-outline'}`
+//           : 'md-mail-open'
+//       }
+//     />
+//   ),
+// };
 
 const bottomTabNavigator = createBottomTabNavigator({
   MainStack,
@@ -78,4 +79,5 @@ const AppNavigator = createSwitchNavigator({
   Main: bottomTabNavigator,
 });
 
-export { AppNavigator, MainStack, MainStackU, middleware };
+// export { AppNavigator, MainStack, MainStackU, middleware };
+export { AppNavigator, MainStack };

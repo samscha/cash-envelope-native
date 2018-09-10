@@ -1,27 +1,11 @@
-import { createStore, applyMiddleware } from 'redux';
-// import { persistStore, persistCombineReducers } from 'redux-persist';
-// import storage from 'redux-persist/es/storage';
-// import notesReducer from './reducers/notes';
-import reducer from './reducers';
+import { applyMiddleware } from 'redux';
+import { createReactNavigationReduxMiddleware } from 'react-navigation-redux-helpers';
 
-import { middleware } from './navigation/AppNavigator';
+import reducer from './src/reducers';
 
-// const persistConfig = {
-//   key: 'root',
-//   storage
-// }
-
-// const reducers = {
-//   notes: notesReducer,
-// };
-
-const store = createStore(reducer, applyMiddleware(middleware));
-
-// const persistedReducers = persistCombineReducers(persistConfig, reducers);
-// const store = createStore(persistedReducers);
-// const persistor = persistStore(store);
-
-export {
-  // persistor,
-  store,
-};
+export default createStore(
+  reducer,
+  applyMiddleware(
+    createReactNavigationReduxMiddleware('root', state => state.nav),
+  ),
+);
