@@ -5,7 +5,7 @@ import { applyMiddleware, createStore } from 'redux';
 
 import { AppLoading, Asset, Font, Icon } from 'expo';
 
-import { AppNavigator } from './src/navigators/AppNavigator';
+import AppNavigator from './src/navigators/AppNavigator';
 import reducer from './src/reducers';
 import * as middleware from './src/redux';
 
