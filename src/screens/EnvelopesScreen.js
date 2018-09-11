@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-  Button,
+  AsyncStorage,
   Platform,
   ScrollView,
   StyleSheet,
@@ -11,47 +11,81 @@ import {
   TouchableHighlight,
 } from 'react-native';
 
+import axios from '../axios';
+
 import Envelope from '../components/Envelope';
 
-const envelopes = [
-  { name: 'Groceries' },
-  { name: 'Pet' },
-  { name: 'Gas' },
-  { name: 'title4' },
-  { name: 'title5' },
-  { name: 'title6' },
-  { name: 'title7' },
-];
+class EnvelopesScreen extends React.Component {
+  state = {
+    envelopes: [],
+  };
 
-const EnvelopesScreen = props => (
-  <View style={styles.container}>
-    <ScrollView style={styles.container}>
-      <TouchableOpacity style={styles.button} onPress={_ => alert('asdf')}>
-        <Text style={styles.buttonText}>+</Text>
-      </TouchableOpacity>
+  async componentWillMount() {
+    const headers = await AsyncStorage.getItem('com.cashenvelope');
 
-      {envelopes.map(e => (
-        <Touchable
-          key={e.name}
-          underlayColor="#dddddd"
-          onPress={_ =>
-            props.navigation.navigate('Envelope', {
-              envelope: e,
-            })
-          }
-        >
-          <Envelope key={e.name} envelope={e} />
-        </Touchable>
-      ))}
-    </ScrollView>
-  </View>
-);
+    try {
+      const response = await axios.get('/envelopes', {}, headers);
+      this.setState({ envelopes: response.data });
+    } catch (error) {
+      // console.log(error);
+      alert('error retrieving envelopes');
+    }
+  }
 
+  render() {
+    const props = this.props;
+    const envelopes = this.state.envelopes;
+
+    return (
+      <View style={styles.container}>
+        <ScrollView style={styles.container}>
+          <TouchableOpacity style={styles.button} onPress={_ => alert('asdf')}>
+            <Text style={styles.buttonText}>+</Text>
+          </TouchableOpacity>
+
+          <View style={styles.envelopes}>
+            {envelopes.map((e, index, array) => (
+              <Touchable
+                key={e.name}
+                underlayColor="#dddddd"
+                onPress={_ =>
+                  props.navigation.navigate('Envelope', {
+                    envelope: e,
+                  })
+                }
+              >
+                {Platform.OS === 'android' ? (
+                  /**
+                   * TouchableNativeFeedback requires a parent View
+                   *
+                   * https://facebook.github.io/react-native/docs/touchablenativefeedback
+                   *
+                   */
+                  <View>
+                    <Envelope
+                      key={e.name}
+                      envelope={e}
+                      isLast={array.length - 1 === index}
+                    />
+                  </View>
+                ) : (
+                  <Envelope
+                    key={e.name}
+                    envelope={e}
+                    isLast={array.length - 1 === index}
+                  />
+                )}
+              </Touchable>
+            ))}
+          </View>
+        </ScrollView>
+      </View>
+    );
+  }
+}
 EnvelopesScreen.navigationOptions = {
   title: 'Envelopes',
 };
-
-export default EnvelopesScreen;
 
 const Touchable =
   Platform.OS === 'android' ? TouchableNativeFeedback : TouchableHighlight;
@@ -69,4 +103,9 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 40,
   },
+  envelopes: {
+    // borderBottomWidth: 0.5,
+  },
 });
+
+export default EnvelopesScreen;

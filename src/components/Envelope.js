@@ -6,6 +6,11 @@ const styles = StyleSheet.create({
     borderTopWidth: 0.5,
     height: 100,
   },
+  lastContainer: {
+    borderTopWidth: 0.5,
+    height: 100,
+    borderBottomWidth: 0.5,
+  },
   title: {
     paddingLeft: 10,
     paddingTop: 10,
@@ -14,9 +19,9 @@ const styles = StyleSheet.create({
 });
 
 const Envelope = props => (
-  <View style={styles.container}>
+  <View style={props.isLast ? styles.lastContainer : styles.container}>
     <Text style={styles.title}>{props.envelope.name}</Text>
-    <Text style={styles.title}>{props.envelope.name}</Text>
+    <Text style={styles.title}>${props.envelope.value}</Text>
   </View>
 );
 
