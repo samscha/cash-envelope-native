@@ -21,16 +21,32 @@ class EnvelopesScreen extends React.Component {
   };
 
   async componentWillMount() {
-    const headers = await AsyncStorage.getItem('com.cashenvelope');
+    const cookies = JSON.parse(await AsyncStorage.getItem('com.cashenvelope'));
 
     try {
-      const response = await axios.get('/envelopes', {}, headers);
+      const response = await axios.request({
+        url: '/envelopes',
+        method: 'get',
+        headers: {
+          Cookie: cookies,
+        },
+      });
       this.setState({ envelopes: response.data });
     } catch (error) {
-      // console.log(error);
-      alert('error retrieving envelopes');
+      // console.log(error.request);
+      // console.log(error.config);
+      // console.log(error.request);
+      // console.log(error.response);
+      // console.log(error.line);
+      // console.log(error.column);
+      // console.log(error.sourceURL);
+      alert(`error retrieving envelopes: ${error.response}`);
     }
   }
+
+  _addEnvelope = async _ => {
+    alert('asdf');
+  };
 
   render() {
     const props = this.props;
@@ -39,7 +55,10 @@ class EnvelopesScreen extends React.Component {
     return (
       <View style={styles.container}>
         <ScrollView style={styles.container}>
-          <TouchableOpacity style={styles.button} onPress={_ => alert('asdf')}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={_ => this._addEnvelope()}
+          >
             <Text style={styles.buttonText}>+</Text>
           </TouchableOpacity>
 

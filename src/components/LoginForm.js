@@ -68,10 +68,12 @@ export default class LoginForm extends React.Component {
       const response = await axios.post('/login', {
         ...this.state,
       });
+
       await AsyncStorage.setItem(
         'com.cashenvelope',
-        JSON.stringify(response.headers),
+        JSON.stringify(response.headers['set-cookie'][0]),
       );
+
       this.props.navigation.navigate('App');
     } catch (error) {
       alert(error.response.data.message);
