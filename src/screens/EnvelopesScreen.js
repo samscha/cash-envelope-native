@@ -18,10 +18,13 @@ import Envelope from '../components/Envelope';
 class EnvelopesScreen extends React.Component {
   state = {
     envelopes: [],
+    cookies: '',
   };
 
   async componentWillMount() {
     const cookies = JSON.parse(await AsyncStorage.getItem('com.cashenvelope'));
+
+    this.setState({ cookies });
 
     try {
       const response = await axios.request({
@@ -40,12 +43,39 @@ class EnvelopesScreen extends React.Component {
       // console.log(error.line);
       // console.log(error.column);
       // console.log(error.sourceURL);
-      alert(`error retrieving envelopes: ${error.response}`);
+      alert(`error retrieving envelopes: ${error.response.data.message}`);
     }
   }
 
-  _addEnvelope = async _ => {
-    alert('asdf');
+  updateEnvelopes = envelope => {
+    // console.log(this.state.envelopes);
+    // console.log(envelope);
+    console.log('ERERE');
+
+    this.setState({
+      envelopes: this.state.envelopes.map(
+        e => (e.id === envelope.id ? envelope : e),
+      ),
+    });
+  };
+
+  addEnvelope = async note => {
+    return alert(notes);
+    // try {
+    //   const response = await axios.request({
+    //     url: '/envelopes',
+    //     method: 'post',
+    //     data: {
+    //       // name: 'asdf',
+    //     },
+    //     headers: {
+    //       Cookie: this.state.cookies,
+    //     },
+    //   });
+    // } catch (error) {
+    //   console.log(error.response.data.message);
+    //   alert(`error adding envelope: ${error.response.data.message}`);
+    // }
   };
 
   render() {
@@ -65,11 +95,12 @@ class EnvelopesScreen extends React.Component {
           <View style={styles.envelopes}>
             {envelopes.map((e, index, array) => (
               <Touchable
-                key={e.name}
+                key={e.id}
                 underlayColor="#dddddd"
                 onPress={_ =>
                   props.navigation.navigate('Envelope', {
                     envelope: e,
+                    updateEnvelopes: this.updateEnvelopes,
                   })
                 }
               >
@@ -81,18 +112,10 @@ class EnvelopesScreen extends React.Component {
                    *
                    */
                   <View>
-                    <Envelope
-                      key={e.name}
-                      envelope={e}
-                      isLast={array.length - 1 === index}
-                    />
+                    {EnvelopeComp(e, index, array, this.editEnvelope)}
                   </View>
                 ) : (
-                  <Envelope
-                    key={e.name}
-                    envelope={e}
-                    isLast={array.length - 1 === index}
-                  />
+                  EnvelopeComp(e, index, array, this.addEnvelope)
                 )}
               </Touchable>
             ))}
@@ -108,6 +131,10 @@ EnvelopesScreen.navigationOptions = {
 
 const Touchable =
   Platform.OS === 'android' ? TouchableNativeFeedback : TouchableHighlight;
+
+const EnvelopeComp = (e, index, array, editEnvelope) => (
+  <Envelope key={e.id} envelope={e} isLast={array.length - 1 === index} />
+);
 
 const styles = StyleSheet.create({
   container: {
