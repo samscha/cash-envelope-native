@@ -1,5 +1,11 @@
 import React from 'react';
-import { AsyncStorage, View, Text, TextInput, StyleSheet } from 'react-native';
+import {
+  TouchableOpacity,
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+} from 'react-native';
 
 import axios from '../axios';
 
@@ -31,38 +37,65 @@ class EnvelopeScreen extends React.Component {
     });
   }
 
-  _handleTextChange = notes => {
-    this.setState({ notes });
-  };
+  componentDidMount() {
+    if (this.props.navigation.getParam('addEnvelope')) {
+      this.props.navigation.getParam('addEnvelope')(this.state);
+    }
+  }
 
   editEnvelope = async data => {
-    const cookies = JSON.parse(await AsyncStorage.getItem('com.cashenvelope'));
-
     try {
       const response = await axios.request({
         url: `/envelopes/${this.state.id}`,
         method: 'put',
         data,
-        headers: {
-          Cookie: cookies,
-        },
       });
 
-      const update = this.props.navigation.getParam('updateEnvelopes', {
+      this.props.navigation.getParam('updateEnvelopes', {
         name: 'error',
-      });
-
-      update(response.data);
+      })(response.data);
     } catch (error) {
       alert(`error editing envelope: ${error.response.data.message}`);
+    }
+  };
+
+  _deleteEnvelope = async _ => {
+    try {
+      const response = await axios.delete(`/envelopes/${this.state.id}`);
+
+      this.props.navigation.getParam('deleteEnvelope', { name: 'error' })(
+        this.state.id,
+      );
+
+      this.props.navigation.navigate('Envelopes');
+    } catch (error) {
+      alert(`error deleting envelope: ${error}`);
     }
   };
 
   render() {
     return (
       <View style={styles.container}>
-        <Text style={styles.title}>{this.state.name}</Text>
-        <Text style={styles.value}>${this.state.value}</Text>
+        <TextInput
+          style={styles.title}
+          value={this.state.name}
+          onChangeText={text => this.setState({ name: text })}
+          onSubmitEditing={_ => this.editEnvelope({ name: this.state.name })}
+          underlineColorAndroid="transparent"
+        />
+
+        <View style={styles.valueContainer}>
+          <Text style={styles.valueText}>$</Text>
+          <TextInput
+            style={styles.value}
+            value={this.state.value + ''}
+            onChangeText={text => this.setState({ value: +text })}
+            onSubmitEditing={_ =>
+              this.editEnvelope({ value: this.state.value })
+            }
+            underlineColorAndroid="transparent"
+          />
+        </View>
 
         <View style={styles.notesContainer}>
           <Text style={styles.notesTitle}>Notes:</Text>
@@ -70,7 +103,7 @@ class EnvelopeScreen extends React.Component {
             value={this.state.notes}
             placeholder={this.state.notes ? null : 'no notes'}
             style={styles.notes}
-            onChangeText={text => this._handleTextChange(text)}
+            onChangeText={text => this.setState({ notes: text })}
             onSubmitEditing={_ =>
               this.editEnvelope({ notes: this.state.notes })
             }
@@ -79,6 +112,13 @@ class EnvelopeScreen extends React.Component {
             underlineColorAndroid="transparent"
           />
         </View>
+
+        <TouchableOpacity
+          onPress={_ => this._deleteEnvelope()}
+          style={styles.buttonContainer}
+        >
+          <Text style={styles.buttonText}>Delete note</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -96,10 +136,18 @@ const styles = StyleSheet.create({
     marginTop: 10,
     textAlign: 'center',
   },
+  valueContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+  },
+  valueText: {
+    alignSelf: 'center',
+  },
   value: {
     fontSize: 18,
     margin: 10,
-    textAlign: 'center',
+    marginLeft: 0,
+    // textAlign: 'center',
   },
   notesContainer: {
     flexDirection: 'row',
@@ -114,6 +162,16 @@ const styles = StyleSheet.create({
     fontSize: notesFontSize,
     padding: 10,
     textAlign: 'left',
+  },
+  buttonContainer: {
+    backgroundColor: '#ff531a',
+    paddingVertical: 15,
+    marginTop: 50,
+  },
+  buttonText: {
+    color: '#fff',
+    textAlign: 'center',
+    fontWeight: '700',
   },
 });
 

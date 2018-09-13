@@ -18,21 +18,17 @@ import Envelope from '../components/Envelope';
 class EnvelopesScreen extends React.Component {
   state = {
     envelopes: [],
-    cookies: '',
   };
 
   async componentWillMount() {
-    const cookies = JSON.parse(await AsyncStorage.getItem('com.cashenvelope'));
+    const headers = JSON.parse(await AsyncStorage.getItem('com.cashenvelope'));
 
-    this.setState({ cookies });
+    axios.defaults.headers = headers;
 
     try {
       const response = await axios.request({
         url: '/envelopes',
         method: 'get',
-        headers: {
-          Cookie: cookies,
-        },
       });
       this.setState({ envelopes: response.data });
     } catch (error) {
@@ -47,11 +43,13 @@ class EnvelopesScreen extends React.Component {
     }
   }
 
-  updateEnvelopes = envelope => {
-    // console.log(this.state.envelopes);
-    // console.log(envelope);
-    console.log('ERERE');
+  addEnvelope = envelope => {
+    this.setState({
+      envelopes: this.state.envelopes.concat(envelope),
+    });
+  };
 
+  updateEnvelopes = envelope => {
     this.setState({
       envelopes: this.state.envelopes.map(
         e => (e.id === envelope.id ? envelope : e),
@@ -59,23 +57,35 @@ class EnvelopesScreen extends React.Component {
     });
   };
 
-  addEnvelope = async note => {
-    return alert(notes);
-    // try {
-    //   const response = await axios.request({
-    //     url: '/envelopes',
-    //     method: 'post',
-    //     data: {
-    //       // name: 'asdf',
-    //     },
-    //     headers: {
-    //       Cookie: this.state.cookies,
-    //     },
-    //   });
-    // } catch (error) {
-    //   console.log(error.response.data.message);
-    //   alert(`error adding envelope: ${error.response.data.message}`);
-    // }
+  deleteEnvelope = id => {
+    this.setState({
+      envelopes: this.state.envelopes.filter(e => e.id !== id),
+    });
+  };
+
+  _addEnvelope = async note => {
+    try {
+      const response = await axios.request({
+        url: '/envelopes',
+        method: 'post',
+        data: {
+          name: 'New note',
+          value: '1',
+          notes: '',
+        },
+      });
+
+      const newEnvelope = response.data;
+
+      this.props.navigation.navigate('Envelope', {
+        envelope: newEnvelope,
+        updateEnvelopes: this.updateEnvelopes,
+        deleteEnvelope: this.deleteEnvelope,
+        addEnvelope: this.addEnvelope,
+      });
+    } catch (error) {
+      alert(`error adding envelope: ${error.response.data.message}`);
+    }
   };
 
   render() {
@@ -101,6 +111,7 @@ class EnvelopesScreen extends React.Component {
                   props.navigation.navigate('Envelope', {
                     envelope: e,
                     updateEnvelopes: this.updateEnvelopes,
+                    deleteEnvelope: this.deleteEnvelope,
                   })
                 }
               >

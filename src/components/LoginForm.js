@@ -71,7 +71,7 @@ export default class LoginForm extends React.Component {
 
       await AsyncStorage.setItem(
         'com.cashenvelope',
-        JSON.stringify(response.headers['set-cookie'][0]),
+        JSON.stringify(response.headers),
       );
 
       this.props.navigation.navigate('App');
