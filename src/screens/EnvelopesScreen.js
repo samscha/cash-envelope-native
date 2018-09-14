@@ -9,6 +9,7 @@ import {
   View,
   TouchableNativeFeedback,
   TouchableHighlight,
+  RefreshControl,
 } from 'react-native';
 
 import axios from '../axios';
@@ -18,29 +19,15 @@ import Envelope from '../components/Envelope';
 class EnvelopesScreen extends React.Component {
   state = {
     envelopes: [],
+    refreshing: false,
   };
 
   async componentWillMount() {
     const headers = JSON.parse(await AsyncStorage.getItem('com.cashenvelope'));
 
     axios.defaults.headers = headers;
-
-    try {
-      const response = await axios.request({
-        url: '/envelopes',
-        method: 'get',
-      });
-      this.setState({ envelopes: response.data });
-    } catch (error) {
-      // console.log(error.request);
-      // console.log(error.config);
-      // console.log(error.request);
-      // console.log(error.response);
-      // console.log(error.line);
-      // console.log(error.column);
-      // console.log(error.sourceURL);
-      alert(`error retrieving envelopes: ${error.response.data.message}`);
-    }
+    this._onRefresh();
+    // this._getEnvelopes();
   }
 
   addEnvelope = envelope => {
@@ -88,13 +75,49 @@ class EnvelopesScreen extends React.Component {
     }
   };
 
+  _onRefresh = _ => {
+    this.setState({ refreshing: true });
+    this._getEnvelopes();
+  };
+
+  _getEnvelopes = async _ => {
+    try {
+      const response = await axios.request({
+        url: '/envelopes',
+        method: 'get',
+      });
+      this.setState({ envelopes: response.data });
+      this.setState({ refreshing: false });
+    } catch (error) {
+      // console.log(error.request);
+      // console.log(error.config);
+      // console.log(error.request);
+      // console.log(error.response);
+      // console.log(error.line);
+      // console.log(error.column);
+      // console.log(error.sourceURL);
+      alert(`error retrieving envelopes: ${error.response.data.message}`);
+      // await AsyncStorage.clear();
+      // this.props.navigation.navigate('Auth');
+      this.setState({ refreshing: false });
+    }
+  };
+
   render() {
     const props = this.props;
     const envelopes = this.state.envelopes;
 
     return (
       <View style={styles.container}>
-        <ScrollView style={styles.container}>
+        <ScrollView
+          style={styles.container}
+          refreshControl={
+            <RefreshControl
+              refreshing={this.state.refreshing}
+              onRefresh={this._onRefresh}
+            />
+          }
+        >
           <TouchableOpacity
             style={styles.button}
             onPress={_ => this._addEnvelope()}

@@ -44,6 +44,12 @@ class EnvelopeScreen extends React.Component {
   }
 
   editEnvelope = async data => {
+    /**
+     * notes can empty
+     */
+    if (Object.values(data)[0] === '' && Object.keys(data)[0] !== 'notes')
+      return alert(`Please provide ${Object.keys(data)[0]}`);
+
     try {
       const response = await axios.request({
         url: `/envelopes/${this.state.id}`,
@@ -81,6 +87,8 @@ class EnvelopeScreen extends React.Component {
           value={this.state.name}
           onChangeText={text => this.setState({ name: text })}
           onSubmitEditing={_ => this.editEnvelope({ name: this.state.name })}
+          onBlur={_ => this.editEnvelope({ name: this.state.name })}
+          returnKeyType="done"
           underlineColorAndroid="transparent"
         />
 
@@ -89,7 +97,9 @@ class EnvelopeScreen extends React.Component {
           <TextInput
             style={styles.value}
             value={this.state.value + ''}
+            returnKeyType="done"
             onChangeText={text => this.setState({ value: +text })}
+            onBlur={_ => this.editEnvelope({ value: this.state.value })}
             onSubmitEditing={_ =>
               this.editEnvelope({ value: this.state.value })
             }
@@ -104,6 +114,7 @@ class EnvelopeScreen extends React.Component {
             placeholder={this.state.notes ? null : 'no notes'}
             style={styles.notes}
             onChangeText={text => this.setState({ notes: text })}
+            onBlur={_ => this.editEnvelope({ notes: this.state.notes })}
             onSubmitEditing={_ =>
               this.editEnvelope({ notes: this.state.notes })
             }
