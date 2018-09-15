@@ -12,13 +12,26 @@ import {
 import axios from '../axios';
 
 export default class LoginForm extends React.Component {
-  state = { username: '', password: '', isLoggingIn: false };
+  state = { username: '', password: '', isLoggingIn: false, error: '' };
 
   componentDidMount() {
     this.emailInput.focus();
   }
 
+  renderAlert = _ =>
+    this.state.error === '' ? null : (
+      <Text style={styles.alert} selectable={false}>
+        {this.state.error}
+      </Text>
+    );
+
+  _handleTextChange = state => {
+    this.setState({ ...state, error: '' });
+  };
+
   _logInAsync = async _ => {
+    this.setState({ error: '' });
+
     const username = this.state.username;
     const password = this.state.password;
 
@@ -43,30 +56,36 @@ export default class LoginForm extends React.Component {
        * this is likely due to connectivity issues
        *
        */
-      const title = 'Error';
+      let msg;
 
-      const msg = error.response
-        ? error.response.data.message
-        : error.request._response;
-
-      this._renderAlert(title, msg, _ => {
-        this.setState({ isLoggingIn: false });
-
-        if (msg.includes('username')) return this.emailInput.focus();
-
-        if (msg.includes('password')) return this.passwordInput.focus();
+      if (error.response) {
+        if (error.response.data.message) {
+          msg = error.response.data.message;
+        } else {
+          if (error.response.request.status === 503) {
+            msg = 'Unable to reach server';
+          } else {
+            msg = 'Unknown error occured';
+          }
+        }
+      } else {
+        msg = error.request._response;
+      }
+      this.setState({
+        error: msg,
+        isLoggingIn: false,
       });
+
+      if (msg.includes('password')) return this.passwordInput.focus();
+
+      /**
+       * the fallback focus
+       */
+      this.emailInput.focus();
     }
   };
 
-  _renderAlert = (title, msg, cb) => {
-    Alert.alert(title, msg, [
-      {
-        text: 'OK',
-        onPress: _ => cb(),
-      },
-    ]);
-  };
+  _resetErrors = _ => this.setState({ errors: '' });
 
   /**
    * `state`ful styles
@@ -79,30 +98,21 @@ export default class LoginForm extends React.Component {
 
   _validateInput = (username, password) => {
     if (!username && !password) {
-      return Alert.alert('', 'Please provide an email and password', [
-        {
-          text: 'OK',
-          onPress: _ => this.emailInput.focus(),
-        },
-      ]);
+      this.setState({ error: 'Please provide an email and password' });
+      this.emailInput.focus();
+      return;
     }
 
     if (username === '' || password === '') {
       if (!username) {
-        return Alert.alert('', 'Please provide an email', [
-          {
-            text: 'OK',
-            onPress: _ => this.emailInput.focus(),
-          },
-        ]);
+        this.setState({ error: 'Please provide an email' });
+        this.emailInput.focus();
+        return;
       }
 
-      return Alert.alert('', 'Please provide a password', [
-        {
-          text: 'OK',
-          onPress: _ => this.passwordInput.focus(),
-        },
-      ]);
+      this.setState({ error: 'Please provide a password' });
+      this.passwordInput.focus();
+      return;
     }
 
     return true;
@@ -116,7 +126,7 @@ export default class LoginForm extends React.Component {
           autoCorrect={false}
           editable={!this.state.isLoggingIn}
           keyboardType="email-address"
-          onChangeText={text => this.setState({ username: text })}
+          onChangeText={text => this._handleTextChange({ username: text })}
           onSubmitEditing={_ => this.passwordInput.focus()}
           placeholder="Email"
           ref={input => (this.emailInput = input)}
@@ -131,11 +141,13 @@ export default class LoginForm extends React.Component {
           returnKeyType="go"
           ref={input => (this.passwordInput = input)}
           placeholder="Password"
-          onChangeText={text => this.setState({ password: text })}
+          onChangeText={text => this._handleTextChange({ password: text })}
           onSubmitEditing={_ => this._logInAsync()}
           underlineColorAndroid="transparent"
           secureTextEntry
         />
+
+        {this.renderAlert()}
 
         <TouchableOpacity
           disabled={this.state.isLoggingIn}
@@ -158,14 +170,11 @@ export default class LoginForm extends React.Component {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 20,
-  },
-  input: {
-    height: 40,
-    backgroundColor: 'rgba(225,225,225,0.55)',
+  alert: {
+    color: '#ff531a',
+    fontWeight: '700',
     marginBottom: 10,
-    padding: 10,
+    textAlign: 'center',
   },
   buttonContainer: {
     backgroundColor: '#2980b6',
@@ -175,6 +184,15 @@ const styles = StyleSheet.create({
     color: '#fff',
     textAlign: 'center',
     fontWeight: '700',
+  },
+  container: {
+    padding: 20,
+  },
+  input: {
+    height: 40,
+    backgroundColor: 'rgba(225,225,225,0.55)',
+    marginBottom: 10,
+    padding: 10,
   },
   signUpContainer: {
     marginTop: 10,
