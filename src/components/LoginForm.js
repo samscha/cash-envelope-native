@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  Alert,
   AsyncStorage,
   StyleSheet,
   Text,
@@ -158,16 +157,20 @@ export default class LoginForm extends React.Component {
         </TouchableOpacity>
 
         <TouchableOpacity
-          disabled={!this.state.isLoggingIn}
-          style={[styles.signUpContainer, { opacity: this._styles('opacity') }]}
+          disabled={this.state.isLoggingIn}
+          style={[styles.altContainer, { opacity: this._styles('opacity') }]}
           onPress={_ => this.props.navigation.navigate('Signup')}
         >
-          <Text style={styles.signUpText}>Sign up</Text>
+          <Text style={styles.altText}>Create an account</Text>
         </TouchableOpacity>
       </View>
     );
   }
 }
+
+const colors = {
+  theme: '#304047',
+};
 
 const styles = StyleSheet.create({
   alert: {
@@ -177,7 +180,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   buttonContainer: {
-    backgroundColor: '#2980b6',
+    backgroundColor: colors.theme,
     paddingVertical: 15,
   },
   buttonText: {
@@ -194,14 +197,14 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     padding: 10,
   },
-  signUpContainer: {
+  altContainer: {
     marginTop: 10,
     paddingVertical: 15,
-    borderColor: '#2980b6',
+    borderColor: colors.theme,
     borderWidth: 1,
   },
-  signUpText: {
-    color: '#2980b6',
+  altText: {
+    color: colors.theme,
     textAlign: 'center',
     fontWeight: '700',
   },
