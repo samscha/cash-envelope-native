@@ -109,8 +109,8 @@ export default class LoginForm extends React.Component {
         return;
       }
 
-      this.setState({ error: 'Please provide a password' });
       this.passwordInput.focus();
+      this.setState({ error: 'Please provide a password' });
       return;
     }
 
@@ -137,8 +137,8 @@ export default class LoginForm extends React.Component {
         <TextInput
           editable={!this.state.isLoggingIn}
           style={[styles.input, { opacity: this._styles('opacity') }]}
-          returnKeyType="go"
           ref={input => (this.passwordInput = input)}
+          returnKeyType="go"
           placeholder="Password"
           onChangeText={text => this._handleTextChange({ password: text })}
           onSubmitEditing={_ => this._logInAsync()}
