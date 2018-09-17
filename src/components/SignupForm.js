@@ -14,9 +14,13 @@ export default class LoginForm extends React.Component {
   state = {
     username: '',
     password: '',
-    retypedPassword: '',
+    confirmPassword: '',
     isSigningUp: false,
     error: '',
+    usernameError: '',
+    passwordError: '',
+    confirmPasswordError: '',
+    hasErrors: true,
   };
 
   componentDidMount() {
@@ -30,21 +34,216 @@ export default class LoginForm extends React.Component {
       </Text>
     );
 
-  _handleTextChange = state => {
-    this.setState({ ...state, error: '' });
+  renderConfirmPasswordAlert = _ =>
+    this.state.confirmPasswordError === '' ? null : (
+      <Text style={styles.alert} selectable={false}>
+        {this.state.confirmPasswordError}
+      </Text>
+    );
+
+  renderUsernameAlert = _ =>
+    this.state.usernameError === '' ? null : (
+      <Text style={styles.alert} selectable={false}>
+        {this.state.usernameError}
+      </Text>
+    );
+
+  renderPasswordAlert = _ =>
+    this.state.passwordError === '' ? null : (
+      <Text style={styles.alert} selectable={false}>
+        {this.state.passwordError}
+      </Text>
+    );
+
+  /* *~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~ */
+  /* *~*~*~*~*~*~*~*~*~* START TextInput CHECK FUNCTIONS *~*~*~*~*~*~*~*~*~*~ */
+  /* *~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~ */
+
+  /**
+   * local `state` will only exist when text is changed in `confirmPassword`
+   * TextInput. This is done because `this.state` is delayed by one char
+   *
+   * otherwise, this function is called when `onBlur` from said TextInput and
+   * checking password (in the specific case mentioned in `_checkPassword`)
+   * without local `state`. This means we are just checking the `this.state`
+   * values for `confirmPassword`
+   *
+   */
+  _checkConfirmPassword = state => {
+    if (this._otherErrorsExistExcept('confirmPasswordError')) return;
+
+    const confirmPassword = state
+      ? state.confirmPassword
+      : this.state.confirmPassword;
+    const password = this.state.password;
+
+    if (password !== confirmPassword) {
+      return this.setState({
+        confirmPasswordError: `Passwords do not match`,
+      });
+    }
+
+    this._resetConfirmPasswordErrors();
   };
 
-  _logInAsync = async _ => {
-    this.setState({ error: '' });
+  /**
+   * it's possible for the user to type in a correctly formatted password
+   * then type in a non-matching but valid `confirmPassword`
+   * then change `password` to match `confirmPassword`
+   * so we need to first check if `confirmPasswordError` exists, which
+   * means there are no other errors and this error will take precedence
+   * over checking for `password` validity
+   *
+   * if there are no `confirmPasswordError`s, then proceed to check `password`
+   *
+   */
+  _checkPassword = state => {
+    // if (this.state.confirmPasswordError !== '')
+    //   return this._checkConfirmPassword();
+
+    if (
+      this.state.confirmPassword !== '' &&
+      (state ? state.password : this.state.password) !==
+        this.state.confirmPassword
+    )
+      return this.setState({
+        confirmPasswordError: `Passwords do not match`,
+      });
+
+    if (this._otherErrorsExistExcept('passwordError')) return;
+
+    const chars = state ? state.password.length : this.state.password.length;
+
+    if (chars < 8 || chars > 64)
+      return this.setState({
+        passwordError: `Password must be between 8 and 64 characters: ${chars}`,
+      });
+
+    this._resetPasswordErrors();
+  };
+
+  _checkPasswordWithConfirmPassword = state => {
+    if (state.password !== this.state.confirmPassword) return;
+
+    this.setState({ confirmPasswordError: '' });
+  };
+
+  _checkUsername = async state => {
+    if (this._otherErrorsExistExcept('usernameError')) return;
+
+    const chars = state ? state.username.length : this.state.username.length;
+
+    if (chars < 7 || chars > 32)
+      return this.setState({
+        usernameError: `Username must be between 7 and 32 characters: ${chars}`,
+      });
+
+    this._resetUsernameErrors();
+    // TODO: add check to see if username exists in db already (async)
+  };
+
+  /* *~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~ */
+  /* *~*~*~*~*~*~*~*~*~*~ END TextInput CHECK FUNCTIONS ~*~*~*~*~*~*~*~*~*~*~ */
+  /* *~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~ */
+
+  /**
+   * check each TextInput to see there isn't an error for that type
+   * check to see if local `state` is for `username`, `password` or
+   * `confirmPassword`
+   *
+   * state:
+   * {
+   *   username | password | confirmPassword: 'my_info_here'
+   * }
+   *
+   * shoudl match `this.state` TextInput fields
+   *
+   */
+  _handleTextChange = state => {
+    switch (Object.keys(state)[0]) {
+      case 'username':
+        if (
+          (this.state.usernameError !== '' &&
+            !this._otherErrorsExistExcept('usernameError')) ||
+          this.state.error !== ''
+        )
+          this._checkUsername(state);
+        break;
+
+      case 'password':
+        if (
+          this.state.passwordError !== '' &&
+          !this._otherErrorsExistExcept('passwordError')
+        )
+          this._checkPassword(state);
+
+        if (this.state.confirmPasswordError !== '')
+          this._checkPasswordWithConfirmPassword(state);
+        break;
+
+      case 'confirmPassword':
+        if (
+          this.state.confirmPasswordError !== '' &&
+          !this._otherErrorsExistExcept('confirmPasswordError')
+        )
+          this._checkConfirmPassword(state);
+        break;
+
+      default:
+    }
+
+    this.setState({
+      ...state,
+      hasErrors:
+        !this._hasValidInput() || state.confirmPassword
+          ? this.state.password !== state.confirmPassword
+          : false || state.password
+            ? state.password !== this.state.confirmPassword
+            : false,
+      error: '',
+    });
+  };
+
+  /**
+   * checks integrity of signup form fields
+   */
+  _hasValidInput = _ => {
+    return (
+      this.state.username !== '' &&
+      this.state.password !== '' &&
+      this.state.confirmPassword !== '' &&
+      this.state.usernameError === '' &&
+      this.state.passwordError === '' &&
+      this.state.confirmPasswordError === ''
+    );
+  };
+
+  _otherErrorsExistExcept = errorType => {
+    const usernameError = this.state.usernameError;
+    const passwordError = this.state.passwordError;
+    const confirmPasswordError = this.state.confirmPasswordError;
+
+    if (usernameError && errorType !== 'usernameError') return true;
+    if (passwordError && errorType !== 'passwordError') return true;
+    if (confirmPasswordError && errorType !== 'confirmPasswordError')
+      return true;
+
+    return false;
+  };
+
+  _signUpAsync = async _ => {
+    this._resetAllErrors();
 
     const username = this.state.username;
     const password = this.state.password;
+    const confirmPassword = this.state.confirmPassword;
 
-    if (!this._validateInput(username, password)) return;
+    if (!this._validateInput(username, password, confirmPassword)) return;
 
     try {
       this.setState({ isSigningUp: true });
-      const response = await axios.post('/login', {
+
+      const response = await axios.post('/users', {
         username,
         password,
       });
@@ -76,12 +275,12 @@ export default class LoginForm extends React.Component {
       } else {
         msg = error.request._response;
       }
+
       this.setState({
+        hasErrors: true,
         error: msg,
         isSigningUp: false,
       });
-
-      if (msg.includes('password')) return this.passwordInput.focus();
 
       /**
        * the fallback focus
@@ -90,33 +289,82 @@ export default class LoginForm extends React.Component {
     }
   };
 
-  _resetErrors = _ => this.setState({ errors: '' });
+  _resetAllErrors = _ => {
+    this._resetConfirmPasswordErrors();
+    this._resetErrors();
+    this._resetPasswordErrors();
+    this._resetUsernameErrors();
+  };
+
+  _resetConfirmPasswordErrors = _ =>
+    this.setState({ confirmPasswordError: '' });
+
+  _resetErrors = _ =>
+    this.setState({
+      error: '',
+    });
+
+  _resetPasswordErrors = _ =>
+    this.setState({
+      passwordError: '',
+    });
+
+  _resetUsernameErrors = _ =>
+    this.setState({
+      usernameError: '',
+    });
 
   /**
    * `state`ful styles
    */
   _styles = key => {
-    const styles = { opacity: this.state.isSigningUp ? 0.2 : 1.0 };
+    const styles = {
+      opacity: this.state.isSigningUp ? 0.2 : 1.0,
+      opacitySignUpButton:
+        this.state.isSigningUp || this.state.hasErrors ? 0.2 : 1.0,
+    };
 
     return styles[key];
   };
 
-  _validateInput = (username, password) => {
-    if (!username && !password) {
-      this.setState({ error: 'Please provide an email and password' });
+  _validateInput = (username, password, confirmPassword) => {
+    if (!username && !password && !confirmPassword) {
+      this.setState({
+        error: 'Please provide an email, password and confirm password',
+      });
       this.emailInput.focus();
       return;
     }
 
-    if (username === '' || password === '') {
+    if (username === '' || password === '' || confirmPassword === '') {
       if (!username) {
-        this.setState({ error: 'Please provide an email' });
+        this.setState({
+          error: 'Please provide an email',
+        });
         this.emailInput.focus();
         return;
       }
 
-      this.setState({ error: 'Please provide a password' });
-      this.passwordInput.focus();
+      if (!password) {
+        this.setState({
+          error: 'Please provide a password',
+        });
+        this.passwordInput.focus();
+        return;
+      }
+
+      this.setState({
+        error: 'Please confirm password',
+      });
+      this.confirmPassword.focus();
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      this.setState({
+        error: 'Passwords do not match',
+      });
+      this.confirmPassword.focus();
       return;
     }
 
@@ -124,6 +372,7 @@ export default class LoginForm extends React.Component {
   };
 
   render() {
+    console.log(this.state);
     return (
       <View style={styles.container}>
         <TextInput
@@ -131,6 +380,7 @@ export default class LoginForm extends React.Component {
           autoCorrect={false}
           editable={!this.state.isSigningUp}
           keyboardType="email-address"
+          onBlur={_ => this._checkUsername()}
           onChangeText={text => this._handleTextChange({ username: text })}
           onSubmitEditing={_ => this.passwordInput.focus()}
           placeholder="Email"
@@ -139,39 +389,51 @@ export default class LoginForm extends React.Component {
           style={[styles.input, { opacity: this._styles('opacity') }]}
           underlineColorAndroid="transparent"
         />
+        {this.renderUsernameAlert()}
 
         <TextInput
           editable={!this.state.isSigningUp}
-          style={[styles.input, { opacity: this._styles('opacity') }]}
-          returnKeyType="go"
-          ref={input => (this.passwordInput = input)}
-          placeholder="Password"
+          onBlur={_ => this._checkPassword()}
           onChangeText={text => this._handleTextChange({ password: text })}
-          onSubmitEditing={_ => this._logInAsync()}
-          underlineColorAndroid="transparent"
+          onSubmitEditing={_ => this.confirmPassword.focus()}
+          placeholder="Password"
+          ref={input => (this.passwordInput = input)}
+          returnKeyType="next"
           secureTextEntry
+          style={[styles.input, { opacity: this._styles('opacity') }]}
+          underlineColorAndroid="transparent"
         />
+        {this.renderPasswordAlert()}
 
         <TextInput
           editable={!this.state.isSigningUp}
-          style={[styles.input, { opacity: this._styles('opacity') }]}
-          returnKeyType="go"
-          ref={input => (this.confirmPassword = input)}
-          placeholder="Confirm Password"
+          onBlur={_ => this._checkConfirmPassword()}
           onChangeText={text =>
-            this._handleTextChange({ retypedPassword: text })
+            this._handleTextChange({ confirmPassword: text })
           }
-          onSubmitEditing={_ => this._logInAsync()}
-          underlineColorAndroid="transparent"
+          onSubmitEditing={_ =>
+            this._hasValidInput && this.password === this.confirmPassword
+              ? this._signUpAsync()
+              : null
+          }
+          placeholder="Confirm Password"
+          ref={input => (this.confirmPassword = input)}
+          returnKeyType="go"
           secureTextEntry
+          style={[styles.input, { opacity: this._styles('opacity') }]}
+          underlineColorAndroid="transparent"
         />
+        {this.renderConfirmPasswordAlert()}
 
         {this.renderAlert()}
 
         <TouchableOpacity
-          disabled={this.state.isSigningUp}
-          onPress={_ => this._logInAsync()}
-          style={[styles.buttonContainer, { opacity: this._styles('opacity') }]}
+          disabled={this.state.isSigningUp || this.state.hasErrors}
+          onPress={_ => this._signUpAsync()}
+          style={[
+            styles.buttonContainer,
+            { opacity: this._styles('opacitySignUpButton') },
+          ]}
         >
           <Text style={styles.buttonText}>Sign up</Text>
         </TouchableOpacity>
