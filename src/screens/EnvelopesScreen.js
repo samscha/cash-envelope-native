@@ -26,8 +26,7 @@ class EnvelopesScreen extends React.Component {
     const headers = JSON.parse(await AsyncStorage.getItem('com.cashenvelope'));
 
     axios.defaults.headers = headers;
-    this._onRefresh();
-    // this._getEnvelopes();
+    this._getEnvelopes();
   }
 
   addEnvelope = envelope => {
@@ -86,20 +85,16 @@ class EnvelopesScreen extends React.Component {
         url: '/envelopes',
         method: 'get',
       });
-      this.setState({ envelopes: response.data });
-      this.setState({ refreshing: false });
+
+      this.setState({ envelopes: response.data, refreshing: false });
     } catch (error) {
-      // console.log(error.request);
-      // console.log(error.config);
-      // console.log(error.request);
-      // console.log(error.response);
-      // console.log(error.line);
-      // console.log(error.column);
-      // console.log(error.sourceURL);
-      alert(`error retrieving envelopes: ${error.response.data.message}`);
-      // await AsyncStorage.clear();
-      // this.props.navigation.navigate('Auth');
-      this.setState({ refreshing: false });
+      const msg = error.response
+        ? error.response.data.message
+        : error.request._response;
+
+      alert(`error retrieving envelopes: ${msg}`);
+
+      await AsyncStorage.clear();
     }
   };
 
