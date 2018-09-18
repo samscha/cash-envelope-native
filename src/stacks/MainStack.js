@@ -17,7 +17,6 @@ export const middleware = createReactNavigationReduxMiddleware(
 );
 
 export const stack = createStackNavigator({
-  // Login: { screen: LoginScreen },
   Envelopes: { screen: EnvelopesScreen },
   Envelope: { screen: EnvelopeScreen },
 });
