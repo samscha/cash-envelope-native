@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  ActivityIndicator,
   AsyncStorage,
   StyleSheet,
   Text,
@@ -11,22 +12,90 @@ import {
 import axios from '../axios';
 
 export default class LoginForm extends React.Component {
-  state = { username: '', password: '', isLoggingIn: false, error: '' };
+  state = {
+    username: '',
+    password: '',
+    isLoggingIn: false,
+    error: '',
+    errors: {},
+  };
 
   componentDidMount() {
     this.emailInput.focus();
   }
+  renderUsernameAlert = _ =>
+    this.state.errors.username ? (
+      <Text style={styles.alert} selectable={false}>
+        {this.state.errors.username}
+      </Text>
+    ) : null;
+
+  renderPasswordAlert = _ =>
+    this.state.errors.password ? (
+      <Text style={styles.alert} selectable={false}>
+        {this.state.errors.password}
+      </Text>
+    ) : null;
 
   renderAlert = _ =>
-    this.state.error === '' ? null : (
+    this.state.errors.login ? (
       <Text style={styles.alert} selectable={false}>
-        {this.state.error}
+        {this.state.errors.login}
       </Text>
-    );
+    ) : null;
+
+  _checkUsername = async _state => {
+    const state = _state || {};
+    state.errors = {};
+
+    const chars = _state ? state.username.length : this.state.username.length;
+
+    if ((chars < 7 || chars > 32) && chars > 0) {
+      state.errors.username = `Username must be between 7 and 32 characters: ${
+        chars < 7 ? 7 - chars : chars - 32
+      } ${chars < 7 ? 'remaining' : 'too many'}`;
+    }
+
+    // TODO: add check to see if username exists in db already (async)
+
+    this.setState({ ...state });
+  };
+
+  _checkPassword = _state => {
+    const state = _state || {};
+    state.errors = {};
+
+    const chars = _state ? state.password.length : this.state.password.length;
+
+    if ((chars < 8 || chars > 64) && chars > 0)
+      state.errors.password = `Password must be between 8 and 64 characters: ${
+        chars < 8 ? 8 - chars : chars - 64
+      } ${chars < 8 ? 'remaining' : 'too many'}`;
+
+    this.setState({ ...state });
+  };
 
   _handleTextChange = state => {
-    this.setState({ ...state, error: '' });
+    switch (Object.keys(state)[0]) {
+      case 'username':
+        return this._checkUsername(state);
+
+      case 'password':
+        return this._checkPassword(state);
+
+      default:
+        return this.setState({
+          errors: {
+            login: `Error updating state: ${Object.keys(state)[0]} not found`,
+          },
+        });
+    }
   };
+
+  _hasErrors = _ =>
+    Object.keys(this.state.errors).length !== 0 ||
+    this.state.username === '' ||
+    this.state.password === '';
 
   _logInAsync = async _ => {
     this.setState({ error: '' });
@@ -70,8 +139,9 @@ export default class LoginForm extends React.Component {
       } else {
         msg = error.request._response;
       }
+
       this.setState({
-        error: msg,
+        errors: { login: msg },
         isLoggingIn: false,
       });
 
@@ -84,33 +154,46 @@ export default class LoginForm extends React.Component {
     }
   };
 
-  _resetErrors = _ => this.setState({ errors: '' });
+  _resetErrors = _ =>
+    this.setState({
+      errors: '',
+    });
 
   /**
    * `state`ful styles
    */
   _styles = key => {
-    const styles = { opacity: this.state.isLoggingIn ? 0.2 : 1.0 };
+    const styles = {
+      opacity: this.state.isLoggingIn ? 0.2 : 1.0,
+      opacityLogInButton:
+        this.state.isLoggingIn || this._hasErrors() ? 0.2 : 1.0,
+    };
 
     return styles[key];
   };
 
   _validateInput = (username, password) => {
     if (!username && !password) {
-      this.setState({ error: 'Please provide an email and password' });
+      this.setState({
+        error: 'Please provide an email and password',
+      });
       this.emailInput.focus();
       return;
     }
 
     if (username === '' || password === '') {
       if (!username) {
-        this.setState({ error: 'Please provide an email' });
+        this.setState({
+          error: 'Please provide an email',
+        });
         this.emailInput.focus();
         return;
       }
 
       this.passwordInput.focus();
-      this.setState({ error: 'Please provide a password' });
+      this.setState({
+        error: 'Please provide a password',
+      });
       return;
     }
 
@@ -125,6 +208,7 @@ export default class LoginForm extends React.Component {
           autoCorrect={false}
           editable={!this.state.isLoggingIn}
           keyboardType="email-address"
+          onBlur={_ => this._checkUsername()}
           onChangeText={text => this._handleTextChange({ username: text })}
           onSubmitEditing={_ => this.passwordInput.focus()}
           placeholder="Email"
@@ -133,27 +217,37 @@ export default class LoginForm extends React.Component {
           style={[styles.input, { opacity: this._styles('opacity') }]}
           underlineColorAndroid="transparent"
         />
+        {this.renderUsernameAlert()}
 
         <TextInput
           editable={!this.state.isLoggingIn}
-          style={[styles.input, { opacity: this._styles('opacity') }]}
-          ref={input => (this.passwordInput = input)}
-          returnKeyType="go"
-          placeholder="Password"
+          onBlur={_ => this._checkPassword()}
           onChangeText={text => this._handleTextChange({ password: text })}
           onSubmitEditing={_ => this._logInAsync()}
-          underlineColorAndroid="transparent"
+          placeholder="Password"
+          ref={input => (this.passwordInput = input)}
+          returnKeyType="go"
           secureTextEntry
+          style={[styles.input, { opacity: this._styles('opacity') }]}
+          underlineColorAndroid="transparent"
         />
+        {this.renderPasswordAlert()}
 
         {this.renderAlert()}
 
         <TouchableOpacity
-          disabled={this.state.isLoggingIn}
+          disabled={this.state.isLoggingIn || this._hasErrors()}
           onPress={_ => this._logInAsync()}
-          style={[styles.buttonContainer, { opacity: this._styles('opacity') }]}
+          style={[
+            styles.buttonContainer,
+            { opacity: this._styles('opacityLogInButton') },
+          ]}
         >
-          <Text style={styles.buttonText}>Log in</Text>
+          {this.state.isLoggingIn ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>Log in</Text>
+          )}
         </TouchableOpacity>
 
         <TouchableOpacity
