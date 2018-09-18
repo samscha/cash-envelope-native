@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  Alert,
   AsyncStorage,
   Platform,
   ScrollView,
@@ -88,14 +89,20 @@ class EnvelopesScreen extends React.Component {
 
       this.setState({ envelopes: response.data, refreshing: false });
     } catch (error) {
+      this.setState({ refreshing: false });
+
       const msg = error.response
         ? error.response.data.message
         : error.request._response;
 
-      alert(`error retrieving envelopes: ${msg}`);
-
-      await AsyncStorage.clear();
+      Alert.alert('Error', `${msg}`, [
+        { text: 'OK', onPress: _ => this._handleEnvelopesError() },
+      ]);
     }
+  };
+
+  _handleEnvelopesError = async _ => {
+    await AsyncStorage.removeItem('com.cashenvelope');
   };
 
   render() {

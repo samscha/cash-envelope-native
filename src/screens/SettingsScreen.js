@@ -66,7 +66,7 @@ export default class SettingsScreen extends React.Component {
   };
 
   _signOutAsync = async _ => {
-    await AsyncStorage.clear();
+    await AsyncStorage.removeItem('com.cashenvelope');
 
     try {
       await axios.get(`logout`);
