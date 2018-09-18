@@ -147,11 +147,9 @@ class EnvelopesScreen extends React.Component {
                    * https://facebook.github.io/react-native/docs/touchablenativefeedback
                    *
                    */
-                  <View>
-                    {EnvelopeComp(e, index, array, this.editEnvelope)}
-                  </View>
+                  <View>{EnvelopeComp(e, index, array)}</View>
                 ) : (
-                  EnvelopeComp(e, index, array, this.addEnvelope)
+                  EnvelopeComp(e, index, array)
                 )}
               </Touchable>
             ))}
@@ -168,7 +166,7 @@ EnvelopesScreen.navigationOptions = {
 const Touchable =
   Platform.OS === 'android' ? TouchableNativeFeedback : TouchableHighlight;
 
-const EnvelopeComp = (e, index, array, editEnvelope) => (
+const EnvelopeComp = (e, index, array) => (
   <Envelope key={e.id} envelope={e} isLast={array.length - 1 === index} />
 );
 

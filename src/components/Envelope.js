@@ -7,14 +7,19 @@ const styles = StyleSheet.create({
     height: 100,
   },
   lastContainer: {
+    borderBottomWidth: 0.5,
     borderTopWidth: 0.5,
     height: 100,
-    borderBottomWidth: 0.5,
   },
   title: {
+    fontSize: 18,
     paddingLeft: 10,
     paddingTop: 10,
-    fontSize: 18,
+  },
+  notes: {
+    fontSize: 12,
+    paddingLeft: 10,
+    paddingTop: 10,
   },
 });
 
@@ -22,11 +27,12 @@ const Envelope = props => (
   <View style={props.isLast ? styles.lastContainer : styles.container}>
     <Text style={styles.title}>{props.envelope.name}</Text>
     <Text style={styles.title}>${props.envelope.value}</Text>
+    <Text style={styles.notes}>{props.envelope.notes}</Text>
   </View>
 );
 
 Envelope.navigationOptions = {
-  title: 'Envelope',
+  // title: 'Envelope',
 };
 
 export default Envelope;
