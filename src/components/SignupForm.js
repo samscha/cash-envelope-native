@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  ActivityIndicator,
   AsyncStorage,
   StyleSheet,
   Text,
@@ -16,10 +17,8 @@ export default class LoginForm extends React.Component {
     password: '',
     confirmPassword: '',
     isSigningUp: false,
+    errors: {},
     error: '',
-    usernameError: '',
-    passwordError: '',
-    confirmPasswordError: '',
     hasErrors: true,
   };
 
@@ -27,119 +26,119 @@ export default class LoginForm extends React.Component {
     this.emailInput.focus();
   }
 
-  renderAlert = _ =>
-    this.state.error === '' ? null : (
-      <Text style={styles.alert} selectable={false}>
-        {this.state.error}
-      </Text>
-    );
-
-  renderConfirmPasswordAlert = _ =>
-    this.state.confirmPasswordError === '' ? null : (
-      <Text style={styles.alert} selectable={false}>
-        {this.state.confirmPasswordError}
-      </Text>
-    );
-
   renderUsernameAlert = _ =>
-    this.state.usernameError === '' ? null : (
+    this.state.errors.username ? (
       <Text style={styles.alert} selectable={false}>
-        {this.state.usernameError}
+        {this.state.errors.username}
       </Text>
-    );
+    ) : null;
 
   renderPasswordAlert = _ =>
-    this.state.passwordError === '' ? null : (
+    this.state.errors.password ? (
       <Text style={styles.alert} selectable={false}>
-        {this.state.passwordError}
+        {this.state.errors.password}
       </Text>
-    );
+    ) : null;
+
+  renderConfirmPasswordAlert = _ =>
+    this.state.errors.confirmPassword ? (
+      <Text style={styles.alert} selectable={false}>
+        {this.state.errors.confirmPassword}
+      </Text>
+    ) : null;
+
+  renderAlert = _ =>
+    this.state.errors.signup ? (
+      <Text style={styles.alert} selectable={false}>
+        {this.state.errors.signup}
+      </Text>
+    ) : null;
 
   /* *~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~ */
   /* *~*~*~*~*~*~*~*~*~* START TextInput CHECK FUNCTIONS *~*~*~*~*~*~*~*~*~*~ */
   /* *~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~ */
 
-  /**
-   * local `state` will only exist when text is changed in `confirmPassword`
-   * TextInput. This is done because `this.state` is delayed by one char
-   *
-   * otherwise, this function is called when `onBlur` from said TextInput and
-   * checking password (in the specific case mentioned in `_checkPassword`)
-   * without local `state`. This means we are just checking the `this.state`
-   * values for `confirmPassword`
-   *
-   */
-  _checkConfirmPassword = state => {
-    if (this._otherErrorsExistExcept('confirmPasswordError')) return;
+  _checkUsername = async _state => {
+    const state = _state || {};
+    state.errors = {};
 
-    const confirmPassword = state
-      ? state.confirmPassword
-      : this.state.confirmPassword;
-    const password = this.state.password;
+    const chars = _state ? state.username.length : this.state.username.length;
 
-    if (password !== confirmPassword) {
-      return this.setState({
-        confirmPasswordError: `Passwords do not match`,
-      });
+    if ((chars < 7 || chars > 32) && chars > 0) {
+      state.errors.username = `Username must be between 7 and 32 characters: ${
+        chars < 7 ? 7 - chars : chars - 32
+      } ${chars < 7 ? 'remaining' : 'too many'}`;
     }
 
-    this._resetConfirmPasswordErrors();
-  };
+    state.error = '';
 
-  /**
-   * it's possible for the user to type in a correctly formatted password
-   * then type in a non-matching but valid `confirmPassword`
-   * then change `password` to match `confirmPassword`
-   * so we need to first check if `confirmPasswordError` exists, which
-   * means there are no other errors and this error will take precedence
-   * over checking for `password` validity
-   *
-   * if there are no `confirmPasswordError`s, then proceed to check `password`
-   *
-   */
-  _checkPassword = state => {
-    // if (this.state.confirmPasswordError !== '')
-    //   return this._checkConfirmPassword();
-
-    if (
-      this.state.confirmPassword !== '' &&
-      (state ? state.password : this.state.password) !==
-        this.state.confirmPassword
-    )
-      return this.setState({
-        confirmPasswordError: `Passwords do not match`,
-      });
-
-    if (this._otherErrorsExistExcept('passwordError')) return;
-
-    const chars = state ? state.password.length : this.state.password.length;
-
-    if (chars < 8 || chars > 64)
-      return this.setState({
-        passwordError: `Password must be between 8 and 64 characters: ${chars}`,
-      });
-
-    this._resetPasswordErrors();
-  };
-
-  _checkPasswordWithConfirmPassword = state => {
-    if (state.password !== this.state.confirmPassword) return;
-
-    this.setState({ confirmPasswordError: '' });
-  };
-
-  _checkUsername = async state => {
-    if (this._otherErrorsExistExcept('usernameError')) return;
-
-    const chars = state ? state.username.length : this.state.username.length;
-
-    if (chars < 7 || chars > 32)
-      return this.setState({
-        usernameError: `Username must be between 7 and 32 characters: ${chars}`,
-      });
-
-    this._resetUsernameErrors();
     // TODO: add check to see if username exists in db already (async)
+
+    this.setState({ ...state });
+  };
+
+  _checkPassword = _state => {
+    const state = _state || {};
+    state.errors = {};
+
+    /**
+     * if there is a confirm password, check if password entries match
+     *
+     * this might happen if the user tries to change `password` instead of
+     * `confirmPassword`
+     */
+    if (this.state.confirmPassword !== '') {
+      const password = state.password || this.state.password;
+      const confirmPassword = this.state.confirmPassword;
+
+      if (password !== confirmPassword)
+        state.errors.confirmPassword = 'Passwords do not match';
+    }
+
+    const chars = _state ? state.password.length : this.state.password.length;
+
+    if (!state.errors.confirmPassword && (chars < 8 || chars > 64) && chars > 0)
+      state.errors.password = `Password must be between 8 and 64 characters: ${
+        chars < 8 ? 8 - chars : chars - 64
+      } ${chars < 8 ? 'remaining' : 'too many'}`;
+
+    state.error = '';
+
+    this.setState({ ...state });
+  };
+
+  _checkConfirmPassword = _state => {
+    const state = _state || {};
+    state.errors = {};
+
+    const password = this.state.password;
+    const confirmPassword = _state
+      ? state.confirmPassword
+      : this.state.confirmPassword;
+
+    if (password !== confirmPassword)
+      state.errors.confirmPassword = 'Passwords do not match';
+
+    /**
+     * if passwords match (there is no confirmPassword error,
+     * then check that `this.state.password` is valid
+     *
+     * this is done to prevent users from typing a non-valid password into
+     * `confirmPassword` then matching it to `password`
+     *
+     */
+    if (!state.errors.confirmPassword && this.state.password !== '') {
+      const chars = this.state.password.length;
+
+      if (chars < 8 || chars > 64)
+        state.errors.password = `Password must be between 8 and 64 characters: ${
+          chars < 8 ? 8 - chars : chars - 64
+        } ${chars < 8 ? 'remaining' : 'too many'}`;
+    }
+
+    state.error = '';
+
+    this.setState({ ...state });
   };
 
   /* *~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~ */
@@ -147,140 +146,71 @@ export default class LoginForm extends React.Component {
   /* *~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~*~ */
 
   /**
-   * check each TextInput to see there isn't an error for that type
-   * check to see if local `state` is for `username`, `password` or
-   * `confirmPassword`
-   *
    * state:
    * {
    *   username | password | confirmPassword: 'my_info_here'
    * }
    *
-   * shoudl match `this.state` TextInput fields
+   * should match `this.state` TextInput fields
    *
    */
   _handleTextChange = state => {
     switch (Object.keys(state)[0]) {
       case 'username':
-        if (
-          (this.state.usernameError !== '' &&
-            !this._otherErrorsExistExcept('usernameError')) ||
-          this.state.error !== ''
-        )
-          this._checkUsername(state);
-        break;
+        return this._checkUsername(state);
 
       case 'password':
-        if (
-          this.state.passwordError !== '' &&
-          !this._otherErrorsExistExcept('passwordError')
-        )
-          this._checkPassword(state);
-
-        if (this.state.confirmPasswordError !== '')
-          this._checkPasswordWithConfirmPassword(state);
-        break;
+        return this._checkPassword(state);
 
       case 'confirmPassword':
-        if (
-          this.state.confirmPasswordError !== '' &&
-          !this._otherErrorsExistExcept('confirmPasswordError')
-        )
-          this._checkConfirmPassword(state);
-        break;
+        return this._checkConfirmPassword(state);
 
       default:
+        return this.setState({ error: `Error updating fields` });
     }
-
-    this.setState({
-      ...state,
-      hasErrors:
-        !this._hasValidInput() || state.confirmPassword
-          ? this.state.password !== state.confirmPassword
-          : false || state.password
-            ? state.password !== this.state.confirmPassword
-            : false,
-      error: '',
-    });
   };
+
+  _hasErrors = _ =>
+    Object.keys(this.state.errors).length !== 0 ||
+    this.state.username === '' ||
+    this.state.password === '' ||
+    this.state.confirmPassword === '';
 
   /**
-   * checks integrity of signup form fields
+   * if creating user is successful, log in to server to get token
    */
-  _hasValidInput = _ => {
-    return (
-      this.state.username !== '' &&
-      this.state.password !== '' &&
-      this.state.confirmPassword !== '' &&
-      this.state.usernameError === '' &&
-      this.state.passwordError === '' &&
-      this.state.confirmPasswordError === ''
-    );
-  };
-
-  _otherErrorsExistExcept = errorType => {
-    const usernameError = this.state.usernameError;
-    const passwordError = this.state.passwordError;
-    const confirmPasswordError = this.state.confirmPasswordError;
-
-    if (usernameError && errorType !== 'usernameError') return true;
-    if (passwordError && errorType !== 'passwordError') return true;
-    if (confirmPasswordError && errorType !== 'confirmPasswordError')
-      return true;
-
-    return false;
-  };
-
   _signUpAsync = async _ => {
-    this._resetAllErrors();
-
     const username = this.state.username;
     const password = this.state.password;
-    const confirmPassword = this.state.confirmPassword;
-
-    if (!this._validateInput(username, password, confirmPassword)) return;
 
     try {
       this.setState({ isSigningUp: true });
 
-      const response = await axios.post('/users', {
+      await axios.post('/users', {
+        username,
+        password,
+      });
+
+      const loginResponse = await axios.post('/login', {
         username,
         password,
       });
 
       await AsyncStorage.setItem(
         'com.cashenvelope',
-        JSON.stringify(response.headers),
+        JSON.stringify(loginResponse.headers),
       );
 
       this.props.navigation.navigate('App');
     } catch (error) {
-      /**
-       * if there is no response error, this means a response was never received
-       * this is likely due to connectivity issues
-       *
-       */
-      let msg;
-
-      if (error.response) {
-        if (error.response.data.message) {
-          msg = error.response.data.message;
-        } else {
-          if (error.response.request.status === 503) {
-            msg = 'Unable to reach server';
-          } else {
-            msg = 'Unknown error occured';
-          }
-        }
-      } else {
-        msg = error.request._response;
-      }
+      const msg = axiosErrorMessage(error);
 
       this.setState({
-        hasErrors: true,
-        error: msg,
+        errors: { signup: msg },
         isSigningUp: false,
       });
+
+      if (msg.includes('password')) return this.passwordInput.focus();
 
       /**
        * the fallback focus
@@ -289,31 +219,6 @@ export default class LoginForm extends React.Component {
     }
   };
 
-  _resetAllErrors = _ => {
-    this._resetConfirmPasswordErrors();
-    this._resetErrors();
-    this._resetPasswordErrors();
-    this._resetUsernameErrors();
-  };
-
-  _resetConfirmPasswordErrors = _ =>
-    this.setState({ confirmPasswordError: '' });
-
-  _resetErrors = _ =>
-    this.setState({
-      error: '',
-    });
-
-  _resetPasswordErrors = _ =>
-    this.setState({
-      passwordError: '',
-    });
-
-  _resetUsernameErrors = _ =>
-    this.setState({
-      usernameError: '',
-    });
-
   /**
    * `state`ful styles
    */
@@ -321,58 +226,13 @@ export default class LoginForm extends React.Component {
     const styles = {
       opacity: this.state.isSigningUp ? 0.2 : 1.0,
       opacitySignUpButton:
-        this.state.isSigningUp || this.state.hasErrors ? 0.2 : 1.0,
+        this.state.isSigningUp || this._hasErrors() ? 0.2 : 1.0,
     };
 
     return styles[key];
   };
 
-  _validateInput = (username, password, confirmPassword) => {
-    if (!username && !password && !confirmPassword) {
-      this.setState({
-        error: 'Please provide an email, password and confirm password',
-      });
-      this.emailInput.focus();
-      return;
-    }
-
-    if (username === '' || password === '' || confirmPassword === '') {
-      if (!username) {
-        this.setState({
-          error: 'Please provide an email',
-        });
-        this.emailInput.focus();
-        return;
-      }
-
-      if (!password) {
-        this.setState({
-          error: 'Please provide a password',
-        });
-        this.passwordInput.focus();
-        return;
-      }
-
-      this.setState({
-        error: 'Please confirm password',
-      });
-      this.confirmPassword.focus();
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      this.setState({
-        error: 'Passwords do not match',
-      });
-      this.confirmPassword.focus();
-      return;
-    }
-
-    return true;
-  };
-
   render() {
-    console.log(this.state);
     return (
       <View style={styles.container}>
         <TextInput
@@ -395,6 +255,7 @@ export default class LoginForm extends React.Component {
           editable={!this.state.isSigningUp}
           onBlur={_ => this._checkPassword()}
           onChangeText={text => this._handleTextChange({ password: text })}
+          onFocus={_ => this._checkPassword()}
           onSubmitEditing={_ => this.confirmPassword.focus()}
           placeholder="Password"
           ref={input => (this.passwordInput = input)}
@@ -411,10 +272,9 @@ export default class LoginForm extends React.Component {
           onChangeText={text =>
             this._handleTextChange({ confirmPassword: text })
           }
+          onFocus={_ => this._checkPassword()}
           onSubmitEditing={_ =>
-            this._hasValidInput && this.password === this.confirmPassword
-              ? this._signUpAsync()
-              : null
+            this._hasErrors() ? null : this._signUpAsync()
           }
           placeholder="Confirm Password"
           ref={input => (this.confirmPassword = input)}
@@ -428,14 +288,18 @@ export default class LoginForm extends React.Component {
         {this.renderAlert()}
 
         <TouchableOpacity
-          disabled={this.state.isSigningUp || this.state.hasErrors}
+          disabled={this.state.isSigningUp || this._hasErrors()}
           onPress={_ => this._signUpAsync()}
           style={[
             styles.buttonContainer,
             { opacity: this._styles('opacitySignUpButton') },
           ]}
         >
-          <Text style={styles.buttonText}>Sign up</Text>
+          {this.state.isSigningUp ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <Text style={styles.buttonText}>Sign up</Text>
+          )}
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -491,3 +355,28 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
 });
+
+/**
+ * if there is no response error, this means a response was never received
+ * this is likely due to connectivity issues
+ *
+ */
+const axiosErrorMessage = error => {
+  let msg;
+
+  if (error.response) {
+    if (error.response.data.message) {
+      msg = error.response.data.message;
+    } else {
+      if (error.response.request.status === 503) {
+        msg = 'Unable to reach server';
+      } else {
+        msg = 'Unknown error occured';
+      }
+    }
+  } else {
+    msg = error.request._response;
+  }
+
+  return msg;
+};
