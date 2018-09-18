@@ -128,7 +128,7 @@ class EnvelopeScreen extends React.Component {
           onPress={_ => this._deleteEnvelope()}
           style={styles.buttonContainer}
         >
-          <Text style={styles.buttonText}>Delete note</Text>
+          <Text style={styles.buttonText}>Delete envelope</Text>
         </TouchableOpacity>
       </View>
     );
