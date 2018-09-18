@@ -18,7 +18,6 @@ export default class LoginForm extends React.Component {
     confirmPassword: '',
     isSigningUp: false,
     errors: {},
-    error: '',
     hasErrors: true,
   };
 
@@ -70,8 +69,6 @@ export default class LoginForm extends React.Component {
       } ${chars < 7 ? 'remaining' : 'too many'}`;
     }
 
-    state.error = '';
-
     // TODO: add check to see if username exists in db already (async)
 
     this.setState({ ...state });
@@ -101,8 +98,6 @@ export default class LoginForm extends React.Component {
       state.errors.password = `Password must be between 8 and 64 characters: ${
         chars < 8 ? 8 - chars : chars - 64
       } ${chars < 8 ? 'remaining' : 'too many'}`;
-
-    state.error = '';
 
     this.setState({ ...state });
   };
@@ -136,8 +131,6 @@ export default class LoginForm extends React.Component {
         } ${chars < 8 ? 'remaining' : 'too many'}`;
     }
 
-    state.error = '';
-
     this.setState({ ...state });
   };
 
@@ -166,7 +159,7 @@ export default class LoginForm extends React.Component {
         return this._checkConfirmPassword(state);
 
       default:
-        return this.setState({ error: `Error updating fields` });
+        return this.setState({ errors: { signup: `Error updating fields` } });
     }
   };
 
