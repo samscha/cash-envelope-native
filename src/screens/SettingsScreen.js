@@ -35,7 +35,9 @@ export default class SettingsScreen extends React.Component {
         user: response.data,
       });
     } catch (error) {
-      //
+      alert('Error getting user info');
+
+      this._signOutAsync();
     }
   };
 
@@ -63,6 +65,20 @@ export default class SettingsScreen extends React.Component {
     ]);
   };
 
+  _signOutAsync = async _ => {
+    await AsyncStorage.clear();
+
+    try {
+      await axios.get(`logout`);
+
+      this.props.navigation.navigate('Auth');
+    } catch (error) {
+      alert('Error logging out');
+
+      this.props.navigation.navigate('Auth');
+    }
+  };
+
   render() {
     return (
       <View style={styles.container}>
@@ -79,16 +95,6 @@ export default class SettingsScreen extends React.Component {
       </View>
     );
   }
-
-  _signOutAsync = async () => {
-    try {
-      await axios.get(`logout`);
-      await AsyncStorage.clear();
-      this.props.navigation.navigate('Auth');
-    } catch (error) {
-      alert('Error logging out');
-    }
-  };
 }
 
 const styles = StyleSheet.create({
