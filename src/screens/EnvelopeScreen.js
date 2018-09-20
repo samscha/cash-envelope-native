@@ -17,31 +17,42 @@ class EnvelopeScreen extends React.Component {
   state = {
     id: '',
     name: '',
-    value: -1,
+    value: '',
     notes: '',
+    errors: {},
   };
 
   componentWillMount() {
     const { id, name, value, notes } = this.props.navigation.getParam(
       'envelope',
-      {
-        name: 'error',
-      },
+      // {
+      //   name: 'error',
+      // },
     );
 
-    this.setState({
-      id,
-      name,
-      value,
-      notes,
-    });
+    // this.setState({ id, name, value, notes });
   }
 
   componentDidMount() {
-    if (this.props.navigation.getParam('addEnvelope')) {
-      this.props.navigation.getParam('addEnvelope')(this.state);
-    }
+    this.titleInput.focus();
+    // if (this.props.navigation.getParam('addEnvelope')) {
+    //   this.props.navigation.getParam('addEnvelope')(this.state);
+    // }
   }
+
+  renderNameAlert = _ =>
+    this.state.errors.name ? (
+      <Text style={styles.alert} selectable={false}>
+        {this.state.errors.name}
+      </Text>
+    ) : null;
+
+  renderValueAlert = _ =>
+    this.state.errors.value ? (
+      <Text style={styles.alert} selectable={false}>
+        {this.state.errors.value}
+      </Text>
+    ) : null;
 
   editEnvelope = async data => {
     /**
@@ -65,6 +76,63 @@ class EnvelopeScreen extends React.Component {
     }
   };
 
+  _checkName = _state => {
+    const state = _state || {};
+    state.name = _state ? _state.name : this.state.name;
+    state.errors = { ...this.state.errors, name: '' };
+
+    const chars = _state ? state.name.length : this.state.name.length;
+
+    if ((chars < 2 || chars > 100) && chars > 0) {
+      state.errors.name = `Envelope name must be between 2 and 100 characters: ${
+        chars < 2 ? 2 - chars : chars - 100
+      } ${chars < 2 ? 'remaining' : 'too many'}`;
+    }
+
+    if (state.name !== '' && state.errors.name === '') {
+      if (state.name.trim().length < 1)
+        state.errors.name = 'Envelope name must have a letter';
+
+      if (state.name[0] === ' ')
+        state.errors.name = 'Envelope name must not start with a space';
+    }
+
+    this.setState({ ...state });
+  };
+
+  _checkValue = _state => {
+    const state = _state || {};
+
+    if (_state) {
+      if (this.state.value === '') state.value = _state.value;
+      else state.value = _state.value.slice(1);
+    }
+
+    if (!_state) state.value = this.state.value.slice(1);
+
+    state.value = _state ? _state.value : this.state.value.slice(1);
+    state.errors = { ...this.state.errors, value: '' };
+
+    if (state.value === '$' || state.value === '')
+      return this.setState({ value: '', errors: state.errors });
+
+    if (_state && !Number.isInteger(+state.value))
+      state.errors.value = 'Envelope value must be a number (integer)';
+
+    if (state.value < 1)
+      state.errors.value = `Envelope value must be greater than 0`;
+
+    state.value = `$${state.value}`;
+
+    this.setState({ ...state });
+  };
+
+  _checkNotes = _state => {
+    const state = _state || {};
+
+    this.setState({ ...state });
+  };
+
   _deleteEnvelope = async _ => {
     try {
       const response = await axios.delete(`/envelopes/${this.state.id}`);
@@ -79,49 +147,84 @@ class EnvelopeScreen extends React.Component {
     }
   };
 
+  _handleText = state => {
+    switch (Object.keys(state)[0]) {
+      case 'name':
+        return this._checkName(state);
+
+      case 'value':
+        return this._checkValue(state);
+
+      case 'notes':
+        return this._checkNotes(state);
+
+      default:
+    }
+  };
+
   render() {
     return (
       <View style={styles.container}>
-        <TextInput
-          style={styles.title}
-          value={this.state.name}
-          onChangeText={text => this.setState({ name: text })}
-          onSubmitEditing={_ => this.editEnvelope({ name: this.state.name })}
-          onBlur={_ => this.editEnvelope({ name: this.state.name })}
-          returnKeyType="done"
-          underlineColorAndroid="transparent"
-        />
-
-        <View style={styles.valueContainer}>
-          <Text style={styles.valueText}>$</Text>
+        <View>
           <TextInput
-            style={styles.value}
-            value={this.state.value + ''}
-            returnKeyType="done"
-            onChangeText={text => this.setState({ value: +text })}
-            onBlur={_ => this.editEnvelope({ value: this.state.value })}
+            onChangeText={text => this._handleText({ name: text })}
+            // onSubmitEditing={_ => this.editEnvelope({ name: this.state.name })}
+            // onBlur={_ => this.editEnvelope({ name: this.state.name })}
             onSubmitEditing={_ =>
-              this.editEnvelope({ value: this.state.value })
+              this.state.value === '' ? this.valueInput.focus() : null
             }
+            placeholder="Envelope Title"
+            ref={input => (this.titleInput = input)}
+            returnKeyType={this.state.value !== '' ? 'done' : 'next'}
+            style={styles.title}
             underlineColorAndroid="transparent"
+            value={this.state.name}
           />
-        </View>
+          {this.renderNameAlert()}
 
-        <View style={styles.notesContainer}>
-          <Text style={styles.notesTitle}>Notes:</Text>
+          {/* <View style={styles.valueContainer}> */}
+          {/* <Text style={styles.valueText}>$</Text> */}
+          <TextInput
+            keyboardType="number-pad"
+            onChangeText={text => this._handleText({ value: text })}
+            onBlur={_ => this._checkValue()}
+            // onSubmitEditing={_ => this.notesInput.focus()}
+            // onBlur={_ => this.editEnvelope({ value: this.state.value })}
+            // onSubmitEditing={_ =>
+            //   this.editEnvelope({ value: this.state.value })
+            // }
+            placeholder="$0"
+            ref={input => (this.valueInput = input)}
+            returnKeyType="done"
+            style={styles.value}
+            underlineColorAndroid="transparent"
+            value={this.state.value}
+          />
+          {this.renderValueAlert()}
+          {/* </View> */}
+
+          {/* <View style={styles.notesContainer}> */}
+          {/* <Text style={styles.notesTitle}>Notes:</Text> */}
           <TextInput
             value={this.state.notes}
-            placeholder={this.state.notes ? null : 'no notes'}
+            placeholder="notes"
             style={styles.notes}
-            onChangeText={text => this.setState({ notes: text })}
-            onBlur={_ => this.editEnvelope({ notes: this.state.notes })}
-            onSubmitEditing={_ =>
-              this.editEnvelope({ notes: this.state.notes })
-            }
+            ref={input => (this.notesInput = input)}
+            onChangeText={text => this._handleText({ notes: text })}
+            // onBlur={_ => this.editEnvelope({ notes: this.state.notes })}
+            // onSubmitEditing={_ =>
+            //   this.editEnvelope({ notes: this.state.notes })
+            // }
             autoCorrect={false}
             returnKeyType="done"
             underlineColorAndroid="transparent"
+            value={this.state.notes}
           />
+          {/* </View> */}
+        </View>
+
+        <View>
+          <Text>actions here</Text>
         </View>
 
         <TouchableOpacity
@@ -138,14 +241,16 @@ class EnvelopeScreen extends React.Component {
 const notesFontSize = 14;
 
 const styles = StyleSheet.create({
+  alert: {
+    color: '#ff531a',
+    fontWeight: '700',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
   container: {
     flex: 1,
     backgroundColor: '#fff',
-  },
-  title: {
-    fontSize: 24,
-    marginTop: 10,
-    textAlign: 'center',
+    justifyContent: 'space-between',
   },
   valueContainer: {
     flexDirection: 'row',
@@ -156,9 +261,12 @@ const styles = StyleSheet.create({
   },
   value: {
     fontSize: 18,
-    margin: 10,
+    // margin: 10,
+    padding: 10,
+    paddingTop: 0,
+    // backgroundColor: 'red',
     marginLeft: 0,
-    // textAlign: 'center',
+    textAlign: 'center',
   },
   notesContainer: {
     flexDirection: 'row',
@@ -183,6 +291,13 @@ const styles = StyleSheet.create({
     color: '#fff',
     textAlign: 'center',
     fontWeight: '700',
+  },
+  title: {
+    fontSize: 24,
+    // marginTop: 10,
+    textAlign: 'center',
+    padding: 10,
+    // backgroundColor: 'red',
   },
 });
 
