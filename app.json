@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "my-new-project",
-    "description": "A very interesting project.",
-    "slug": "my-new-project",
+    "name": "Cash Envelope",
+    "description": "A simple app for keeping track of finances through virtual cash envelopes",
+    "slug": "cash-envelope-native",
     "privacy": "public",
     "sdkVersion": "29.0.0",
     "platforms": ["ios", "android"],
@@ -17,9 +17,7 @@
     "updates": {
       "fallbackToCacheTimeout": 0
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true
     }

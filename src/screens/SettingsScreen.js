@@ -73,7 +73,7 @@ export default class SettingsScreen extends React.Component {
 
       this.props.navigation.navigate('Auth');
     } catch (error) {
-      alert('Error logging out');
+      // alert('Error logging out');
 
       this.props.navigation.navigate('Auth');
     }
