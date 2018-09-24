@@ -210,10 +210,16 @@ export default class LoginForm extends React.Component {
           keyboardType="email-address"
           onBlur={_ => this._checkUsername()}
           onChangeText={text => this._handleTextChange({ username: text })}
-          onSubmitEditing={_ => this.passwordInput.focus()}
+          onSubmitEditing={_ =>
+            this.state.password && !this._hasErrors()
+              ? this._logInAsync()
+              : this.passwordInput.focus()
+          }
           placeholder="Email"
           ref={input => (this.emailInput = input)}
-          returnKeyType="next"
+          returnKeyType={
+            this.state.password && !this._hasErrors() ? 'done' : 'next'
+          }
           style={[styles.input, { opacity: this._styles('opacity') }]}
           underlineColorAndroid="transparent"
         />

@@ -24,10 +24,8 @@ class EnvelopeScreen extends React.Component {
     errors: {},
     isSaved: false,
     isSaving: false,
-    savedSuccess: false,
     isDeleting: false,
     message: '',
-    disabled: { save: { state: false } },
   };
 
   componentDidMount() {
@@ -347,8 +345,12 @@ class EnvelopeScreen extends React.Component {
           {this.renderAlert()}
 
           <TextInput
-            onChangeText={text => this._handleText({ name: text })}
-            // onSubmitEditing={_ => this.editEnvelope({ name: this.state.name })}
+            // autoFocus={true}
+            onChangeText={text =>
+              this._handleText({
+                name: text,
+              })
+            } // onSubmitEditing={_ => this.editEnvelope({ name: this.state.name })}
             // onBlur={_ => this.editEnvelope({ name: this.state.name })}
             onBlur={_ => this._checkName()}
             onSubmitEditing={_ =>
@@ -364,10 +366,9 @@ class EnvelopeScreen extends React.Component {
           {this.renderNameAlert()}
 
           <TextInput
-            keyboardType="number-pad"
+            keyboardType="phone-pad"
             onChangeText={text => this._handleText({ value: text })}
-            onBlur={_ => this._checkValue()}
-            // onSubmitEditing={_ => this.notesInput.focus()}
+            onBlur={_ => this._checkValue()} // onSubmitEditing={_ => this.notesInput.focus()}
             // onBlur={_ => this.editEnvelope({ value: this.state.value })}
             // onSubmitEditing={_ =>
             //   this.editEnvelope({ value: this.state.value })
@@ -389,8 +390,7 @@ class EnvelopeScreen extends React.Component {
             placeholder="notes"
             style={styles.notes}
             ref={input => (this.notesInput = input)}
-            onChangeText={text => this._handleText({ notes: text })}
-            // onBlur={_ => this.editEnvelope({ notes: this.state.notes })}
+            onChangeText={text => this._handleText({ notes: text })} // onBlur={_ => this.editEnvelope({ notes: this.state.notes })}
             // onSubmitEditing={_ =>
             //   this.editEnvelope({ notes: this.state.notes })
             // }
