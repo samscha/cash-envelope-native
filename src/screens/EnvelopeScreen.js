@@ -1,6 +1,7 @@
 import React from 'react';
 import {
   ActivityIndicator,
+  Platform,
   TouchableOpacity,
   View,
   Text,
@@ -26,6 +27,8 @@ class EnvelopeScreen extends React.Component {
     isSaving: false,
     isDeleting: false,
     message: '',
+    hasUpdate: false,
+    isUpdating: false,
   };
 
   componentDidMount() {
@@ -48,6 +51,19 @@ class EnvelopeScreen extends React.Component {
       });
 
     this.titleInput.focus();
+  }
+
+  componentDidUpdate(_, prevState) {
+    if (
+      this.state.isSaved &&
+      (prevState.name !== '' &&
+        prevState.value !== '' &&
+        prevState.bites !== '') &&
+      (prevState.name !== this.state.name ||
+        prevState.value !== this.state.value ||
+        prevState.notes !== this.state.notes)
+    )
+      this.setState({ hasUpdate: true });
   }
 
   componentWillUnmount() {
@@ -82,31 +98,103 @@ class EnvelopeScreen extends React.Component {
       </Text>
     ) : null;
 
-  editEnvelope = async data => {
-    /**
-     * notes can empty
-     */
-    if (Object.values(data)[0] === '' && Object.keys(data)[0] !== 'notes')
-      return alert(`Please provide ${Object.keys(data)[0]}`);
+  renderSaveUpdateEnvelopeButton = _ =>
+    this.state.isSaved ? null : (
+      <TouchableOpacity
+        onPress={_ => this._addEnvelope()}
+        disabled={this.state.isSaving}
+        style={[styles.buttonContainerSave, this._styles('save')]}
+      >
+        {this.state.isSaving ? (
+          <ActivityIndicator size="small" color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>Save envelope</Text>
+        )}
+      </TouchableOpacity>
+    );
+
+  renderUpdateEnvelopeButton = _ =>
+    this.state.hasUpdate ? (
+      <TouchableOpacity
+        onPress={_ => this._editEnvelope()}
+        disabled={this.state.isUpdating}
+        style={[styles.buttonContainerSave, this._styles('update')]}
+      >
+        {this.state.isUpdating ? (
+          <ActivityIndicator size="small" color="#fff" />
+        ) : (
+          <Text style={styles.buttonText}>Update envelope</Text>
+        )}
+      </TouchableOpacity>
+    ) : null;
+
+  _addEnvelope = async _ => {
+    this._dismissKeyboard();
+
+    if (!this._check()) return;
+
+    const { name, value, notes } = this.state;
+
+    const envelope = { name, value: value.slice(1), notes };
 
     try {
-      const response = await axios.request({
-        url: `/envelopes/${this.state.id}`,
-        method: 'put',
-        data,
-      });
+      this.setState({ isSaving: true });
 
-      this.props.navigation.getParam('updateEnvelopes', {
-        name: 'error',
-      })(response.data);
+      const response = await axios.post(`/envelopes`, envelope);
+      const newEnvelope = response.data;
+
+      this.props.navigation.getParam('addEnvelope')(newEnvelope);
+
+      this.setState({
+        id: newEnvelope.id,
+        isSaved: true,
+        isSaving: false,
+      });
     } catch (error) {
+      this.setState({ isSaving: false });
+    }
+  };
+
+  _dismissKeyboard = _ => {
+    this.titleInput.blur();
+    this.valueInput.blur();
+    this.notesInput.blur();
+  };
+
+  _editEnvelope = async _ => {
+    this._dismissKeyboard();
+
+    if (!this._check()) return;
+
+    const { name, value, notes } = this.state;
+
+    const envelope = { name, value: value.slice(1), notes };
+
+    this.setState({ isUpdating: true });
+
+    try {
+      const response = await axios.put(`/envelopes/${this.state.id}`, envelope);
+
+      this.setState({ isUpdating: false, hasUpdate: false });
+
+      this.props.navigation.getParam('updateEnvelopes')(response.data);
+    } catch (error) {
+      this.setState({ isUpdating: false });
       alert(`error editing envelope: ${error.response.data.message}`);
     }
   };
 
-  _addEnvelope = async _ => {
-    const { name, value, notes } = this.state;
-    const envelope = { name, value: value.slice(1), notes };
+  __setGeneralError = error => {
+    this.setState({
+      errors: {
+        ...this.state.errors,
+        error,
+      },
+    });
+  };
+
+  _check = _ => {
+    const { name, value } = this.state;
 
     if (name === '' && value === '')
       return this.__setGeneralError(
@@ -119,36 +207,7 @@ class EnvelopeScreen extends React.Component {
     if (value === '')
       return this.__setGeneralError('Please provide an envelope value');
 
-    try {
-      this.setState({ isSaving: true });
-
-      const response = await axios.post(`/envelopes`, envelope);
-      const newEnvelope = response.data;
-
-      this.props.navigation.getParam('addEnvelope')(newEnvelope);
-
-      setTimeout(() => {
-        this.setState({ isSaved: true });
-      }, 4000);
-
-      // this.setState({ id: newEnvelope.id, isSaved: true, isSaving: false });
-      this.setState({
-        id: newEnvelope.id,
-        isSaved: true,
-        isSaving: false,
-      });
-    } catch (error) {
-      this.setState({ isSaving: false });
-    }
-  };
-
-  __setGeneralError = error => {
-    this.setState({
-      errors: {
-        ...this.state.errors,
-        error,
-      },
-    });
+    return true;
   };
 
   _checkName = _state => {
@@ -165,11 +224,6 @@ class EnvelopeScreen extends React.Component {
     else if (chars > 100)
       state.errors.name = `Envelope name must be less than 100 characters: ${chars -
         100} too many`;
-
-    // if ((chars < 2 || chars > 100) && chars > 0)
-    //   state.errors.name = `Envelope name must be between 2 and 100 characters: ${
-    //     chars < 2 ? 2 - chars : chars - 100
-    //   } ${chars < 2 ? 'remaining' : 'too many'}`;
 
     if (state.name !== '' && !state.errors.name) {
       if (state.name.trim().length < 1)
@@ -285,6 +339,9 @@ class EnvelopeScreen extends React.Component {
       save: {
         opacity: this.state.isSaving ? 0.2 : 1.0,
       },
+      update: {
+        opacity: this.state.isUpdating ? 0.2 : 1.0,
+      },
     };
 
     return styles[key];
@@ -329,36 +386,21 @@ class EnvelopeScreen extends React.Component {
         {this.renderMessage()}
 
         <View>
-          {this.state.isSaved ? null : (
-            <TouchableOpacity
-              onPress={_ => this._addEnvelope()}
-              disabled={this.state.isSaving}
-              style={[styles.buttonContainerSave, this._styles('save')]}
-            >
-              {this.state.isSaving ? (
-                <ActivityIndicator size="small" color="#fff" />
-              ) : (
-                <Text style={styles.buttonText}>Save envelope</Text>
-              )}
-            </TouchableOpacity>
-          )}
+          {this.renderUpdateEnvelopeButton()}
+          {this.renderSaveUpdateEnvelopeButton()}
           {this.renderAlert()}
 
           <TextInput
-            // autoFocus={true}
             onChangeText={text =>
               this._handleText({
                 name: text,
               })
-            } // onSubmitEditing={_ => this.editEnvelope({ name: this.state.name })}
-            // onBlur={_ => this.editEnvelope({ name: this.state.name })}
-            onBlur={_ => this._checkName()}
-            onSubmitEditing={_ =>
-              this.state.value === '' ? this.valueInput.focus() : null
             }
+            onBlur={_ => this._checkName()}
+            onSubmitEditing={_ => this.valueInput.focus()}
             placeholder="Envelope Title"
             ref={input => (this.titleInput = input)}
-            returnKeyType={this.state.value !== '' ? 'done' : 'next'}
+            returnKeyType={this.state.isSaved ? 'done' : 'next'}
             style={styles.title}
             underlineColorAndroid="transparent"
             value={this.state.name}
@@ -366,19 +408,15 @@ class EnvelopeScreen extends React.Component {
           {this.renderNameAlert()}
 
           <TextInput
-            keyboardType="phone-pad"
+            keyboardType={
+              Platform.OS === 'iOS' ? 'name-phone-pad' : 'phone-pad'
+            }
             onChangeText={text => this._handleText({ value: text })}
-            onBlur={_ => this._checkValue()} // onSubmitEditing={_ => this.notesInput.focus()}
-            // onBlur={_ => this.editEnvelope({ value: this.state.value })}
-            // onSubmitEditing={_ =>
-            //   this.editEnvelope({ value: this.state.value })
-            // }
-            // onSubmitEditing={_ =>
-            //   !this.state.isSaved ? this._addEnvelope() : null
-            // }
+            onSubmitEditing={_ => this.notesInput.focus()}
+            onBlur={_ => this._checkValue()}
             placeholder="$0"
             ref={input => (this.valueInput = input)}
-            returnKeyType="done"
+            returnKeyType={this.state.isSaved ? 'done' : 'next'}
             style={styles.value}
             underlineColorAndroid="transparent"
             value={this.state.value}
@@ -386,16 +424,12 @@ class EnvelopeScreen extends React.Component {
           {this.renderValueAlert()}
 
           <TextInput
-            value={this.state.notes}
+            onChangeText={text => this._handleText({ notes: text })}
+            onSubmitEditing={_ => this.titleInput.focus()}
             placeholder="notes"
-            style={styles.notes}
             ref={input => (this.notesInput = input)}
-            onChangeText={text => this._handleText({ notes: text })} // onBlur={_ => this.editEnvelope({ notes: this.state.notes })}
-            // onSubmitEditing={_ =>
-            //   this.editEnvelope({ notes: this.state.notes })
-            // }
-            autoCorrect={false}
             returnKeyType="done"
+            style={styles.notes}
             underlineColorAndroid="transparent"
             value={this.state.notes}
           />
