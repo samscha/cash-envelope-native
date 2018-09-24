@@ -93,7 +93,8 @@ export default class LoginForm extends React.Component {
   };
 
   _hasErrors = _ =>
-    Object.keys(this.state.errors).length !== 0 ||
+    (Object.keys(this.state.errors).length !== 0 &&
+      !this.state.errors.msg.includes('network connection')) ||
     this.state.username === '' ||
     this.state.password === '';
 
