@@ -38,6 +38,7 @@ Caveats:
 - [ ] Create a list of transactions for each envelope in `features`
 - [ ] Create a system for easily adding transactions
 - [ ] Add server logic for addiing transactions for a specific envelope
+- [ ] Add 'No Envelopes' text when there are no envelopes
 
 ## Known bugs
 
