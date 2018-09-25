@@ -2,11 +2,11 @@ import React from 'react';
 import {
   ActivityIndicator,
   Platform,
-  TouchableOpacity,
-  View,
+  StyleSheet,
   Text,
   TextInput,
-  StyleSheet,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 import axios from '../axios';
@@ -29,6 +29,7 @@ class EnvelopeScreen extends React.Component {
     message: '',
     hasUpdate: false,
     isUpdating: false,
+    prev: {},
   };
 
   componentDidMount() {
@@ -40,14 +41,17 @@ class EnvelopeScreen extends React.Component {
       updatedAt,
     } = this.props.navigation.getParam('envelope');
 
+    const formattedValue = `$${value}`;
+
     if (id && name && value)
       return this.setState({
         id,
         name,
-        value: `$${value}`,
+        value: formattedValue,
         notes,
         updatedAt,
         isSaved: true,
+        prev: { id, name, value: formattedValue, notes },
       });
 
     this.titleInput.focus();
@@ -106,7 +110,7 @@ class EnvelopeScreen extends React.Component {
         style={[styles.buttonContainerSave, this._styles('save')]}
       >
         {this.state.isSaving ? (
-          <ActivityIndicator size="small" color="#fff" />
+          <ActivityIndicator color="#fff" />
         ) : (
           <Text style={styles.buttonText}>Save envelope</Text>
         )}
@@ -114,19 +118,33 @@ class EnvelopeScreen extends React.Component {
     );
 
   renderUpdateEnvelopeButton = _ =>
-    this.state.hasUpdate ? (
+    this.state.hasUpdate && !this._hasErrors() ? (
       <TouchableOpacity
         onPress={_ => this._editEnvelope()}
         disabled={this.state.isUpdating}
         style={[styles.buttonContainerSave, this._styles('update')]}
       >
         {this.state.isUpdating ? (
-          <ActivityIndicator size="small" color="#fff" />
+          <ActivityIndicator color="#fff" />
         ) : (
           <Text style={styles.buttonText}>Update envelope</Text>
         )}
       </TouchableOpacity>
     ) : null;
+
+  renderDeleteEnvelopeButton = _ => (
+    <TouchableOpacity
+      onPress={_ => this._deleteEnvelope()}
+      disabled={this.state.isDeleting || !this.state.isSaved}
+      style={[styles.buttonContainer, this._styles('delete')]}
+    >
+      {this.state.isDeleting ? (
+        <ActivityIndicator color="#fff" />
+      ) : (
+        <Text style={styles.buttonText}>Delete envelope</Text>
+      )}
+    </TouchableOpacity>
+  );
 
   _addEnvelope = async _ => {
     this._dismissKeyboard();
@@ -149,6 +167,12 @@ class EnvelopeScreen extends React.Component {
         id: newEnvelope.id,
         isSaved: true,
         isSaving: false,
+        prev: {
+          id: newEnvelope.id,
+          name: this.state.name,
+          value: this.state.value,
+          notes: this.state.notes,
+        },
       });
     } catch (error) {
       this.setState({ isSaving: false });
@@ -175,7 +199,13 @@ class EnvelopeScreen extends React.Component {
     try {
       const response = await axios.put(`/envelopes/${this.state.id}`, envelope);
 
-      this.setState({ isUpdating: false, hasUpdate: false });
+      const { id, name, value, notes } = this.state;
+
+      this.setState({
+        isUpdating: false,
+        hasUpdate: false,
+        prev: { id, name, value, notes },
+      });
 
       this.props.navigation.getParam('updateEnvelopes')(response.data);
     } catch (error) {
@@ -233,6 +263,14 @@ class EnvelopeScreen extends React.Component {
         state.errors.name = 'Envelope name must not start with a space';
     }
 
+    if (
+      this.state.isSaved &&
+      this.state.prev.name === this.state.name &&
+      this.state.prev.value === this.state.value &&
+      this.state.prev.notes === this.state.notes
+    )
+      state.hasUpdate = false;
+
     delete state.errors.error;
 
     this.setState({ ...state });
@@ -278,7 +316,29 @@ class EnvelopeScreen extends React.Component {
     if (state.value < 1 && !state.errors.value)
       state.errors.value = `Envelope value must be greater than 0`;
 
+    const nonDigits = state.value.replace(/[0-9]/g, '');
+
+    if (nonDigits && !state.errors.value)
+      state.errors.value = `Envelope value must only be digits: ${nonDigits} not valid`;
+
+    // for (let i = 0; i < state.value.length; i++) {
+    //   const num = state.value[i];
+
+    //   if (!'1234567890'.includes(num)) {
+    //     state.errors.value = `Envelope value must only be digits: ${num} not valid`;
+    //     break;
+    //   }
+    // }
+
     state.value = `$${state.value}`;
+
+    if (
+      this.state.isSaved &&
+      this.state.prev.name === this.state.name &&
+      this.state.prev.value === this.state.value &&
+      this.state.prev.notes === this.state.notes
+    )
+      state.hasUpdate = false;
 
     delete state.errors.error;
 
@@ -287,6 +347,14 @@ class EnvelopeScreen extends React.Component {
 
   _checkNotes = _state => {
     const state = _state || {};
+
+    if (
+      this.state.isSaved &&
+      this.state.prev.name === this.state.name &&
+      this.state.prev.value === this.state.value &&
+      this.state.prev.notes === this.state.notes
+    )
+      state.hasUpdate = false;
 
     this.setState({ ...state });
   };
@@ -400,7 +468,8 @@ class EnvelopeScreen extends React.Component {
             onSubmitEditing={_ => this.valueInput.focus()}
             placeholder="Envelope Title"
             ref={input => (this.titleInput = input)}
-            returnKeyType={this.state.isSaved ? 'done' : 'next'}
+            // returnKeyType={this.state.isSaved ? 'done' : 'next'}
+            returnKeyType="next"
             style={styles.title}
             underlineColorAndroid="transparent"
             value={this.state.name}
@@ -408,15 +477,15 @@ class EnvelopeScreen extends React.Component {
           {this.renderNameAlert()}
 
           <TextInput
-            keyboardType={
-              Platform.OS === 'iOS' ? 'name-phone-pad' : 'phone-pad'
-            }
+            // keyboardType={Platform.OS === 'ios' ? 'number-pad' : 'phone-pad'}
+            keyboardType="phone-pad"
             onChangeText={text => this._handleText({ value: text })}
             onSubmitEditing={_ => this.notesInput.focus()}
             onBlur={_ => this._checkValue()}
             placeholder="$0"
             ref={input => (this.valueInput = input)}
-            returnKeyType={this.state.isSaved ? 'done' : 'next'}
+            // returnKeyType={this.state.isSaved ? 'done' : 'next'}
+            returnKeyType={Platform.OS === 'ios' ? 'done' : 'next'}
             style={styles.value}
             underlineColorAndroid="transparent"
             value={this.state.value}
@@ -428,7 +497,7 @@ class EnvelopeScreen extends React.Component {
             onSubmitEditing={_ => this.titleInput.focus()}
             placeholder="notes"
             ref={input => (this.notesInput = input)}
-            returnKeyType="done"
+            returnKeyType="next"
             style={styles.notes}
             underlineColorAndroid="transparent"
             value={this.state.notes}
@@ -436,7 +505,9 @@ class EnvelopeScreen extends React.Component {
         </View>
 
         <View>
-          <Text>actions here</Text>
+          <Text style={[styles.buttonText, { color: '#000' }]}>
+            {`<<actions here>>`}
+          </Text>
         </View>
 
         <View>
@@ -446,17 +517,7 @@ class EnvelopeScreen extends React.Component {
               : null}
           </Text>
 
-          <TouchableOpacity
-            onPress={_ => this._deleteEnvelope()}
-            disabled={this.state.isDeleting || !this.state.isSaved}
-            style={[styles.buttonContainer, this._styles('delete')]}
-          >
-            {this.state.isDeleting ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <Text style={styles.buttonText}>Delete envelope</Text>
-            )}
-          </TouchableOpacity>
+          {this.renderDeleteEnvelopeButton()}
         </View>
       </View>
     );
@@ -493,6 +554,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.theme,
     paddingVertical: 15,
   },
+  buttonText: {
+    color: '#fff',
+    textAlign: 'center',
+    fontWeight: '700',
+  },
   container: {
     flex: 1,
     backgroundColor: '#fff',
@@ -527,11 +593,6 @@ const styles = StyleSheet.create({
     fontSize: notesFontSize,
     padding: 10,
     textAlign: 'left',
-  },
-  buttonText: {
-    color: '#fff',
-    textAlign: 'center',
-    fontWeight: '700',
   },
   title: {
     fontSize: 24,

@@ -93,9 +93,7 @@ export default class LoginForm extends React.Component {
   };
 
   _hasErrors = _ =>
-    (Object.keys(this.state.errors).length !== 0 &&
-      this.state.errors.msg &&
-      !this.state.errors.msg.includes('network connection')) ||
+    Object.keys(this.state.errors).length !== 0 ||
     this.state.username === '' ||
     this.state.password === '';
 
@@ -220,7 +218,7 @@ export default class LoginForm extends React.Component {
           placeholder="Email"
           ref={input => (this.emailInput = input)}
           returnKeyType={
-            this.state.password && !this._hasErrors() ? 'done' : 'next'
+            this.state.password && !this._hasErrors() ? 'go' : 'next'
           }
           style={[styles.input, { opacity: this._styles('opacity') }]}
           underlineColorAndroid="transparent"
@@ -234,7 +232,7 @@ export default class LoginForm extends React.Component {
           onSubmitEditing={_ => this._logInAsync()}
           placeholder="Password"
           ref={input => (this.passwordInput = input)}
-          returnKeyType="go"
+          returnKeyType={!this._hasErrors() ? 'go' : 'done'}
           secureTextEntry
           style={[styles.input, { opacity: this._styles('opacity') }]}
           underlineColorAndroid="transparent"
