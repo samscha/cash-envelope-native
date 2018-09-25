@@ -44,3 +44,4 @@ Caveats:
 - [ ] The 'Update envelope' button does not hide when the envelope state
       is the same as the server version
 - [ ] The login page has some bugs with error checking for allowing login
+- [ ] Session expiration does not log out the user if on `EnvelopesScreen`
