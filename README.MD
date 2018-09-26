@@ -6,7 +6,7 @@
 
 [Demo](https://expo.io/@samscha/cash-envelope-native)
 
-[GitHub](https://github.com/samscha/cash-envelope-native)
+[Server (GitHub)](https://github.com/samscha/cash-envelope)
 
 ## Install
 
