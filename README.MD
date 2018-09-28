@@ -8,6 +8,8 @@
 
 [Server (GitHub)](https://github.com/samscha/cash-envelope)
 
+[Blog Post](https://medium.com/@samscha/creating-a-postgres-java-spring-react-native-virtual-cash-envelope-app-in-depth-tutorial-9dc62af8fd3f)
+
 ## Install
 
 To install and run the app locally:
@@ -42,6 +44,8 @@ Caveats:
 - [ ] Add componentWillUnmount axios cancel calls
 - [ ] Add custom list order to ensure refreshing doesn't reorder envelopes list
 - [ ] Refactor error checking and input validation into own file / module
+- [ ] Add login logic with successful signup on server-side
+- [ ] Add swipe-to-delete envelope on main EnvelopesScreeen page
 
 ## Known bugs
 
