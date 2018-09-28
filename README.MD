@@ -39,6 +39,9 @@ Caveats:
 - [ ] Create a system for easily adding transactions
 - [ ] Add server logic for addiing transactions for a specific envelope
 - [ ] Add 'No Envelopes' text when there are no envelopes
+- [ ] Add componentWillUnmount axios cancel calls
+- [ ] Add custom list order to ensure refreshing doesn't reorder envelopes list
+- [ ] Refactor error checking and input validation into own file / module
 
 ## Known bugs
 
