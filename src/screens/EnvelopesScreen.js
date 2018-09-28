@@ -58,33 +58,12 @@ class EnvelopesScreen extends React.Component {
   };
 
   _addEnvelope = _ => {
-    // try {
-    //   const response = await axios.request({
-    //     url: '/envelopes',
-    //     method: 'post',
-    //     data: {
-    //       name: 'New note',
-    //       value: '1',
-    //       notes: '',
-    //     },
-    //   });
-
-    // const newEnvelope = {
-    //   id: '0',
-    //   name: 'Test',
-    //   value: 1,
-    //   notes: 'Test note',
-    // };
-
     this.props.navigation.navigate('Envelope', {
       envelope: {},
       addEnvelope: this.addEnvelope,
       updateEnvelopes: this.updateEnvelopes,
       deleteEnvelope: this.deleteEnvelope,
     });
-    // } catch (error) {
-    //   alert(`error adding envelope: ${error.response.data.message}`);
-    // }
   };
 
   _onRefresh = _ => {
