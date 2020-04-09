@@ -1,31 +1,24 @@
 {
-  "expo": {
-    "name": "Cash Envelope",
-    "description": "A simple app for keeping track of finances through virtual cash envelopes",
-    "slug": "cash-envelope-native",
-    "privacy": "public",
-    "sdkVersion": "29.0.0",
-    "platforms": [
-      "ios",
-      "android"
-    ],
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
-    "splash": {
-      "image": "./assets/images/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
-    "updates": {
-      "fallbackToCacheTimeout": 0
-    },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
-    "ios": {
-      "supportsTablet": true
-    },
-    "githubUrl": "https://github.com/samscha/cash-envelope-native"
-  }
+    "expo": {
+        "name": "cash-envelope-native",
+        "description": "A simple app for keeping track of finances through virtual cash envelopes",
+        "slug": "cash-envelope-native",
+        "platforms": ["ios", "android", "web"],
+        "version": "1.0.0",
+        "orientation": "portrait",
+        "icon": "./assets/images/icon.png",
+        "splash": {
+            "image": "./assets/images/splash.png",
+            "resizeMode": "contain",
+            "backgroundColor": "#ffffff"
+        },
+        "updates": {
+            "fallbackToCacheTimeout": 0
+        },
+        "assetBundlePatterns": ["**/*"],
+        "ios": {
+            "supportsTablet": true
+        },
+        "githubUrl": "https://github.com/samscha/cash-envelope-native"
+    }
 }
